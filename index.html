@@ -749,25 +749,36 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 }
 
 /* ── TV MODE ── */
-#tv-overlay{position:fixed;inset:0;background:#080E1A;z-index:500;display:none;flex-direction:column;color:#E8EEF8;font-family:'Rubik','Segoe UI',Arial,sans-serif;}
+#tv-overlay{position:fixed;inset:0;background:#010812;z-index:500;display:none;flex-direction:column;color:#E8EEF8;font-family:'Rubik','Segoe UI',Arial,sans-serif;}
 #tv-overlay.show{display:flex;}
-.tv-header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;border-bottom:2px solid #1E2D4A;}
-.tv-biz{font-size:28px;font-weight:800;color:#E8EEF8;}
-.tv-clock{font-size:36px;font-weight:800;color:#6B82A8;font-variant-numeric:tabular-nums;}
-.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;padding:20px 30px;flex:1;overflow:auto;}
-.tv-tile{border-radius:16px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;min-height:160px;border:2px solid transparent;}
-.tv-tile.ok{background:#021A0E;border-color:#007A4D;}
-.tv-tile.warn{background:#1A0E00;border-color:#D97706;}
-.tv-tile.crit{background:#1A0000;border-color:#C0392B;}
-.tv-tile.offline{background:#0F1829;border-color:#1E2D4A;}
-.tv-qty{font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.tv-header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:rgba(0,59,142,.15);border-bottom:1px solid rgba(255,255,255,.06);}
+.tv-biz{font-size:22px;font-weight:800;color:#fff;letter-spacing:.5px;}
+.tv-biz-sub{font-size:12px;color:#4A6A9A;margin-top:2px;font-weight:400;}
+.tv-clock{font-size:32px;font-weight:700;color:#4A8FE8;font-variant-numeric:tabular-nums;}
+.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px 20px;flex:1;overflow:auto;}
+.tv-tile{border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px;position:relative;overflow:hidden;}
+.tv-tile::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 14px 14px 0;}
+.tv-tile.ok{background:rgba(0,122,77,.08);border:1px solid rgba(0,122,77,.25);}
+.tv-tile.ok::before{background:#007A4D;}
+.tv-tile.warn{background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);}
+.tv-tile.warn::before{background:#D97706;}
+.tv-tile.crit{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);}
+.tv-tile.crit::before{background:#C0392B;}
+.tv-tile.offline{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);}
+.tv-tile.offline::before{background:#2A3D5A;}
+.tv-qty{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:8px;}
 .tv-tile.ok .tv-qty{color:#10B981;}
 .tv-tile.warn .tv-qty{color:#F59E0B;}
 .tv-tile.crit .tv-qty{color:#EF4444;}
-.tv-tile.offline .tv-qty{color:#1E2D4A;}
-.tv-name{font-size:16px;font-weight:600;color:#6B82A8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tv-shelf{font-size:12px;color:#2A3D5A;margin-top:4px;}
-.tv-exit{position:fixed;top:20px;left:20px;z-index:501;background:#0F1829;border:1px solid #1E2D4A;border-radius:10px;color:#6B82A8;padding:10px 20px;font-size:14px;cursor:pointer;font-family:inherit;}
+.tv-tile.offline .tv-qty{color:#2A3D5A;}
+.tv-name{font-size:14px;font-weight:700;color:#C8D8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tv-shelf{font-size:11px;color:#3A5070;margin-top:3px;font-weight:500;}
+.tv-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle;}
+.tv-tile.ok .tv-status-dot{background:#10B981;}
+.tv-tile.warn .tv-status-dot{background:#F59E0B;}
+.tv-tile.crit .tv-status-dot{background:#EF4444;}
+.tv-tile.offline .tv-status-dot{background:#2A3D5A;}
+.tv-exit{position:fixed;top:16px;left:16px;z-index:501;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#8AAAD0;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;backdrop-filter:blur(4px);}
 
 /* ── LEADERBOARD ── */
 .lb-tabs{display:flex;gap:6px;margin-bottom:14px;}
@@ -1247,7 +1258,7 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 </div>
 
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal-box mid" style="width:calc(100% - 28px);">
+  <div class="modal-box mid" style="width:calc(100% - 28px);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h3 style="margin:0;">⚙️ הגדרות</h3>
       <button class="modal-close" onclick="closeModal('modal-settings')">&#x2715;</button>
@@ -1593,7 +1604,10 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 <div id="tv-overlay">
   <button class="tv-exit" onclick="exitTVMode()">יציאה &#x2715;</button>
   <div class="tv-header">
-    <div class="tv-biz" id="tv-biz-name">WeightStock</div>
+    <div>
+      <div class="tv-biz" id="tv-biz-name">WeightStock</div>
+      <div class="tv-biz-sub">מסך מלאי — עדכון אוטומטי כל 30 שניות</div>
+    </div>
     <div class="tv-clock" id="tv-clock">00:00</div>
   </div>
   <div class="tv-grid" id="tv-grid"></div>
@@ -3635,9 +3649,11 @@ function renderTVGrid(){
     var it=its.find(function(i){return i.id===sh.itemId;});
     var r=latestR(sh.id), st=calcSt(sh,r);
     html+='<div class="tv-tile '+st+'">'+
-      '<div class="tv-qty">'+(r?r.qty:'&#x2014;')+'</div>'+
-      '<div><div class="tv-name">'+(it?it.name:'&#x2014;')+'</div>'+
-      '<div class="tv-shelf">'+sh.name+'</div></div>'+
+      '<div class="tv-qty">'+(r?r.qty:'—')+'</div>'+
+      '<div>'+
+        '<div class="tv-name"><span class="tv-status-dot"></span>'+(it?it.name:'—')+'</div>'+
+        '<div class="tv-shelf">📍 '+sh.name+'</div>'+
+      '</div>'+
     '</div>';
   });
   if(!html)html='<div style="color:#475569;font-size:24px;text-align:center;grid-column:1/-1;margin-top:40px;">אין משטחי שקילה</div>';
