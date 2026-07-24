@@ -3866,7 +3866,10 @@ function printItemLabel(){
     (sku?'<div class="row">מק"ט: <b>'+sku+'</b></div>':'')+
     (loc?'<div class="row">&#x1F4CD; '+loc+'</div>':'')+
     (sup?'<div class="row">ספק: <b>'+sup+'</b></div>':'')+
-    '<button class="no-print" onclick="window.print()">הדפס</button>'+
+    '<div class="no-print" style="display:flex;gap:10px;justify-content:center;margin-top:14px;">'+
+    '<button onclick="window.print()">🖨️ הדפס</button>'+
+    '<button onclick="window.close()" style="background:#64748b;">✕ סגור</button>'+
+    '</div>'+
     '<script>setTimeout(function(){window.print();},400);<\/script></body></html>');
   w.document.close();
 }
