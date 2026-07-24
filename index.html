@@ -1175,15 +1175,15 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
       <div><label>סוג יחידה *</label><select id="im-utype"></select></div>
       <div><label>משקל ליחידה (גרם) *</label><input id="im-uwt" type="number" placeholder="5.2" step="0.1"></div>
     </div>
-    <button class="adv-btn" onclick="toggleAdv()">פרטים נוספים (מק"ט, מחיר, ספק...)</button>
+    <button class="adv-btn" onclick="toggleAdv()">🏭 פרטי ספק והזמנה</button>
     <div class="adv-wrap" id="adv-wrap">
       <div class="row">
         <div><label>מק"ט / קטלוג</label><input id="im-sku" placeholder="ABC-123"></div>
-        <div><label>ברקוד</label><div style="display:flex;gap:6px;align-items:flex-end;"><input id="im-bar" placeholder="7290000000000" style="margin-top:4px;flex:1;"><button class="icon-btn" onclick="openBarcode()" title="סרוק ברקוד" style="margin-bottom:0;flex:0 0 38px;">📷</button></div></div>
+        <div><label id="im-price-lbl">מחיר ליחידה</label><input id="im-price" type="number" step="0.01" placeholder="0.00"></div>
       </div>
       <div class="row">
-        <div><label id="im-price-lbl">מחיר ליחידה</label><input id="im-price" type="number" step="0.01" placeholder="0.00"></div>
         <div><label>כמות הזמנה מינ'</label><input id="im-minord" type="number" placeholder="100"></div>
+        <div><label>כמות הזמנה קבועה</label><input id="im-reorderqty" type="number" placeholder="50"></div>
       </div>
       <label>ספק</label>
       <div style="display:flex;gap:8px;align-items:flex-end;">
@@ -1198,11 +1198,18 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
       <label>WhatsApp ספק</label><input id="im-supwa" type="tel" placeholder="050-0000000">
       <label>מייל ספק</label><input id="im-supemail" type="email" placeholder="supplier@example.com">
       <label>מייל להזמנות</label><input id="im-ordermail" type="email" placeholder="orders@supplier.com">
-      <label>תאריך תפוגה</label><input id="im-expiry" type="date">
-      <label>כמות הזמנה קבועה</label><input id="im-reorderqty" type="number" placeholder="50">
       <label>הערות</label><textarea id="im-notes" placeholder="הערות על הפריט..."></textarea>
-      <div class="zone-h" style="margin-top:16px;">📍 מיקום במחסן</div>
-      <div class="row">
+    </div>
+    <button class="adv-btn" onclick="toggleAdv2()" style="margin-top:8px;">📍 מיקום במחסן ומידע נוסף</button>
+    <div class="adv-wrap" id="adv-wrap2" style="display:none;">
+      <label>ברקוד</label>
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <input id="im-bar" placeholder="7290000000000" style="margin-top:4px;flex:1;">
+        <button class="icon-btn" onclick="openBarcode()" title="סרוק ברקוד" style="flex:0 0 38px;">📷</button>
+      </div>
+      <label>תאריך תפוגה</label><input id="im-expiry" type="date">
+      <div style="margin-top:12px;font-size:13px;font-weight:700;color:var(--muted);">📍 מיקום במחסן</div>
+      <div class="row" style="margin-top:8px;">
         <div><label>שורה</label><input id="im-loc-row" placeholder="A, B, 1..."></div>
         <div><label>מדף</label><input id="im-loc-shelf" placeholder="1, 2..."></div>
         <div><label>תא</label><input id="im-loc-cell" placeholder="1, 2..."></div>
@@ -2728,7 +2735,9 @@ function openEditItem(id){
   openModal('modal-item');
 }
 window.openEditItem=openEditItem;
-function toggleAdv(){var w=document.getElementById('adv-wrap');w.classList.toggle('open');document.querySelector('.adv-btn').textContent=w.classList.contains('open')?'פרטים נוספים (פתוח)':'פרטים נוספים (מק"ט, מחיר, ספק...)';}
+function toggleAdv(){var w=document.getElementById('adv-wrap');w.classList.toggle('open');}
+function toggleAdv2(){var w=document.getElementById('adv-wrap2');w.style.display=w.style.display==='none'?'block':'none';}
+window.toggleAdv2=toggleAdv2;
 window.toggleAdv=toggleAdv;
 
 function saveItem(){
