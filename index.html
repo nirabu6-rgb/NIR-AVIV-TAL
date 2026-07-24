@@ -151,21 +151,21 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 
 /* ── ICON BUTTONS ── */
 .icon-btn{
-  background:var(--card2);
-  border:1px solid var(--border);
-  border-radius:50%;
-  width:38px;
-  height:38px;
-  font-size:16px;
+  background:transparent;
+  border:none;
+  border-radius:8px;
+  width:34px;
+  height:34px;
+  font-size:18px;
   display:flex;
   align-items:center;
   justify-content:center;
-  flex:0 0 38px;
-  color:var(--text);
+  flex:0 0 34px;
+  color:var(--muted);
   position:relative;
-  transition:background .15s;
+  transition:background .15s, color .15s;
 }
-.icon-btn:hover{background:var(--card3);}
+.icon-btn:hover{background:var(--card2);color:var(--accent);}
 .back-btn{
   background:var(--card2);
   border:1px solid var(--border);
@@ -982,13 +982,11 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 <div class="screen active" id="screen-dashboard">
   <div class="topbar">
     <div><h2><span id="dash-logo">&#x2696;&#xFE0F;</span> WeightStock</h2><div class="muted" id="db-sub" style="font-size:12px;">מערכת מלאי חכם לפי משקל</div></div>
-    <div style="display:flex;gap:8px;">
-      <button class="icon-btn" onclick="toggleSearch()" id="search-btn" title="חיפוש">&#x1F50D;</button>
-<button class="icon-btn" id="bell-btn" onclick="navTo('screen-alerts')">&#x1F514;</button>
-      <button class="icon-btn" onclick="openLeaderboard()" title="לוח מובילים">&#x1F3C6;</button>
-      <button class="icon-btn" onclick="copyInventory()" title="העתק מלאי">&#x1F4CB;</button>
-      <button class="icon-btn" onclick="openOrderToday()" title="מה להזמין היום">&#x1F6D2;</button>
-      <button class="icon-btn" onclick="openSettings()">&#x2699;&#xFE0F;</button>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <button class="icon-btn" onclick="toggleSearch()" id="search-btn" title="חיפוש" style="font-size:16px;">🔍</button>
+      <button class="icon-btn" id="bell-btn" onclick="navTo('screen-alerts')" title="התראות" style="font-size:16px;">🔔</button>
+      <button class="icon-btn" onclick="openOrderToday()" title="מה להזמין היום" style="font-size:16px;">🛒</button>
+      <button class="icon-btn" onclick="openSettings()" title="הגדרות" style="font-size:16px;">⚙️</button>
     </div>
   </div>
   <div id="search-bar">
