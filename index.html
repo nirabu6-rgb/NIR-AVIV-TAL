@@ -905,7 +905,10 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 <div class="modal-overlay" id="modal-plans">
   <div class="modal-box" style="width:calc(100% - 28px);max-height:92vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <h3 style="margin:0;">💳 מנוי WeightStock</h3>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="closeModal('modal-plans');openSettings();" style="background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:0;">← הגדרות</button>
+        <h3 style="margin:0;">💳 מנוי WeightStock</h3>
+      </div>
       <button class="modal-close" onclick="closeModal('modal-plans')">&#x2715;</button>
     </div>
 
@@ -1352,7 +1355,7 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 
       <!-- מנוי -->
       <div class="card" style="margin:0;padding:0;overflow:hidden;">
-        <button onclick="openUpgradePlans()" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+        <button onclick="closeModal('modal-settings');openUpgradePlans();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
           <div style="display:flex;align-items:center;gap:10px;font-weight:700;">💳 מנוי<span id="settings-plan-badge" style="font-size:11px;background:rgba(37,99,235,.12);color:var(--accent);border-radius:20px;padding:2px 10px;font-weight:600;"></span></div>
           <span style="color:var(--muted);">›</span>
         </button>
