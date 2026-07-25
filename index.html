@@ -1378,6 +1378,14 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
         </button>
       </div>
 
+      <!-- מחשבון הקמה -->
+      <div class="card" style="margin:0;padding:0;overflow:hidden;">
+        <button onclick="closeModal('modal-settings');openSetupCalc();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">🧮 מחשבון הקמה</div>
+          <span style="color:var(--muted);">›</span>
+        </button>
+      </div>
+
       <!-- TV Mode -->
       <div class="card" style="margin:0;padding:0;overflow:hidden;">
         <button onclick="openTVMode()" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
@@ -1578,6 +1586,56 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 </div>
 
 <!-- MODAL: LEADERBOARD -->
+<!-- מחשבון הקמה -->
+<div class="modal-overlay" id="modal-setup-calc">
+  <div class="modal-box mid" style="width:calc(100% - 28px);max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">🧮 מחשבון הקמת עסק</h3>
+      <button class="modal-close" onclick="closeModal('modal-setup-calc')">&#x2715;</button>
+    </div>
+
+    <!-- סוג עסק -->
+    <label>סוג העסק</label>
+    <select id="calc-biz-type" onchange="calcUpdate()">
+      <option value="small">עסק קטן (עד 200 פריטים)</option>
+      <option value="medium">עסק בינוני (200–1000 פריטים)</option>
+      <option value="large">עסק גדול (1000+ פריטים)</option>
+      <option value="warehouse">מחסן / לוגיסטיקה</option>
+    </select>
+
+    <!-- כמות משקלים -->
+    <label style="margin-top:14px;">כמות משקלים</label>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+      <button onclick="calcScales(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card2);font-size:20px;cursor:pointer;flex:0 0 36px;">−</button>
+      <div id="calc-scales-num" style="font-size:28px;font-weight:800;color:var(--accent);min-width:40px;text-align:center;">1</div>
+      <button onclick="calcScales(1)" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card2);font-size:20px;cursor:pointer;flex:0 0 36px;">+</button>
+    </div>
+
+    <!-- סוג משקל -->
+    <label style="margin-top:14px;">סוג משקל</label>
+    <select id="calc-scale-type" onchange="calcUpdate()">
+      <option value="basic">בסיסי 0–5 ק"ג (₪150–400)</option>
+      <option value="mid" selected>בינוני 0–30 ק"ג (₪400–1,200)</option>
+      <option value="industrial">תעשייתי 0–150 ק"ג (₪1,200–4,000)</option>
+      <option value="precision">מדויק מעבדה (₪3,000–15,000)</option>
+    </select>
+
+    <!-- מנוי -->
+    <label style="margin-top:14px;">מסלול מנוי</label>
+    <select id="calc-plan" onchange="calcUpdate()">
+      <option value="0">בסיסי — חינמי</option>
+      <option value="49">מקצועי — ₪49/חודש</option>
+      <option value="99" selected>עסקי — ₪99/חודש</option>
+      <option value="199">ענק — ₪199/חודש</option>
+    </select>
+
+    <!-- תוצאות -->
+    <div id="calc-result" style="margin-top:20px;background:var(--card2);border-radius:14px;padding:16px;"></div>
+
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;">* מחירי משקלים הם הערכה בלבד — יש לבדוק מול ספקי ציוד</div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-leaderboard">
   <div class="modal-box mid" style="width:calc(100% - 28px);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -3625,6 +3683,55 @@ function exitTVMode(){
   }
 }
 window.exitTVMode=exitTVMode;
+
+/* ════════════════════════════════════════════════════
+   מחשבון הקמה
+════════════════════════════════════════════════════ */
+var _calcScales=1;
+function calcScales(d){
+  _calcScales=Math.max(1,Math.min(50,_calcScales+d));
+  document.getElementById('calc-scales-num').textContent=_calcScales;
+  calcUpdate();
+}
+function calcUpdate(){
+  var biz=document.getElementById('calc-biz-type').value;
+  var st=document.getElementById('calc-scale-type').value;
+  var plan=parseInt(document.getElementById('calc-plan').value)||0;
+  var scaleMin={basic:150,mid:400,industrial:1200,precision:3000}[st];
+  var scaleMax={basic:400,mid:1200,industrial:4000,precision:15000}[st];
+  var totalMin=scaleMin*_calcScales;
+  var totalMax=scaleMax*_calcScales;
+  var setup={small:500,medium:1500,large:3000,warehouse:5000}[biz];
+  var monthly=plan;
+  var year1Min=totalMin+setup+monthly*12;
+  var year1Max=totalMax+setup+monthly*12;
+  var html=
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600;">סיכום עלויות:</div>'+
+    '<div style="display:flex;flex-direction:column;gap:10px;">'+
+    row('⚖️ '+_calcScales+' משקל'+((_calcScales>1)?'ים':''),'₪'+fmt(totalMin)+' – ₪'+fmt(totalMax))+
+    row('🏢 הקמה והתקנה','₪'+fmt(setup))+
+    row('📱 מנוי חודשי',monthly?'₪'+monthly+'/חודש':'חינמי')+
+    '</div>'+
+    '<div style="border-top:1px solid var(--border);margin:14px 0;"></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<div style="font-weight:800;font-size:15px;">סה"כ שנה ראשונה</div>'+
+      '<div style="font-size:18px;font-weight:800;color:var(--accent);">₪'+fmt(year1Min)+' – ₪'+fmt(year1Max)+'</div>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'+
+      '<div style="font-size:13px;color:var(--muted);">מחודש שני ואילך</div>'+
+      '<div style="font-size:15px;font-weight:700;color:var(--muted);">₪'+monthly+'/חודש</div>'+
+    '</div>';
+  document.getElementById('calc-result').innerHTML=html;
+}
+function row(label,val){
+  return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">'+
+    '<span>'+label+'</span><span style="font-weight:700;">'+val+'</span></div>';
+}
+function fmt(n){return n.toLocaleString('he-IL');}
+function openSetupCalc(){calcUpdate();openModal('modal-setup-calc');}
+window.openSetupCalc=openSetupCalc;
+window.calcScales=calcScales;
+window.calcUpdate=calcUpdate;
 
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
