@@ -3330,29 +3330,18 @@ window.openReceive=openReceive;window.saveReceive=saveReceive;
 var _barcodeStream=null;
 function openBarcode(){
   document.getElementById('barcode-manual-input').value='';
-  var vw=document.getElementById('barcode-video-wrap');
   var sta=document.getElementById('barcode-status');
-  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia||(typeof ZXing!=='undefined')){
-    sta.textContent='מפעיל מצלמה...';
-    vw.style.display='flex';
-    var vid=document.getElementById('barcode-video');
-    startCameraScan(vid, function(code){
-      document.getElementById('barcode-manual-input').value=code;
-      sta.textContent='✓ ברקוד נמצא: '+code;
-      stopBarcodeStream();
-    }, function(){
-      sta.textContent='לא ניתן לגשת למצלמה — הזן ידנית';
-      vw.style.display='none';
-    });
-    }).catch(function(){
-      vw.style.display='none';
-      sta.textContent='לא ניתן להפעיל מצלמה — הזן ברקוד ידנית';
-    });
-  } else {
-    vw.style.display='none';
-    sta.textContent='הזן ברקוד ידנית';
-  }
+  sta.textContent='';
   openModal('modal-barcode');
+  // סרוק ישירות עם המצלמה
+  startCameraScan(null, function(code){
+    document.getElementById('barcode-manual-input').value=code;
+    sta.textContent='✓ ברקוד נמצא: '+code;
+    closeModal('modal-barcode');
+    confirmBarcode();
+  }, function(e){
+    sta.textContent=e&&e.message?e.message:'';
+  });
 }
 function stopBarcodeStream(){
   if(_barcodeStream){_barcodeStream.getTracks().forEach(function(t){t.stop();});_barcodeStream=null;}
@@ -3392,16 +3381,13 @@ function initQuickScanScreen(){
 function startQuickScan(){
   if(_qsStream){stopQuickScan();return;}
   var qs=document.getElementById('qs-status');
-  var vw=document.getElementById('qs-video-wrap'), vid=document.getElementById('qs-video');
-  if(vw)vw.style.display='block';
-  if(qs)qs.textContent='מפעיל מצלמה...';
-  startCameraScan(vid, function(code){
-    stopQuickScan();
+  if(qs)qs.textContent='פותח מצלמה...';
+  startCameraScan(null, function(code){
+    if(qs)qs.textContent='✓ נמצא: '+code;
     var m=document.getElementById('qs-manual'); if(m)m.value=code;
     qsSearchBarcode(code);
-  }, function(){
-    if(vw)vw.style.display='none';
-    if(qs)qs.textContent='לא ניתן לגשת למצלמה — הזן ברקוד ידנית';
+  }, function(e){
+    if(qs)qs.textContent=e&&e.message?e.message:'לא ניתן לסרוק — הזן ידנית';
   });
 }
 window.startQuickScan=startQuickScan;
@@ -3655,53 +3641,37 @@ document.addEventListener('keydown',function(e){
 var _scannerActive=false, _zxReader=null;
 
 function startCameraScan(videoEl, onFound, onError){
-  if(_scannerActive) return;
-  _scannerActive=true;
-  videoEl.setAttribute('playsinline','');
-  videoEl.setAttribute('muted','');
-
-  function fallbackBD(){
-    if(typeof BarcodeDetector!=='undefined'){
-      navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
-        videoEl.srcObject=stream; videoEl.play();
-        var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});
-        var iv=setInterval(function(){
-          if(!_scannerActive){clearInterval(iv);return;}
-          bd.detect(videoEl).then(function(codes){
-            if(codes.length){clearInterval(iv);stopCameraScan();onFound(codes[0].rawValue);}
-          }).catch(function(){});
-        },300);
-      }).catch(function(e){_scannerActive=false;if(onError)onError(e);});
-      return;
+  // iOS Safari: צילום תמונה עם המצלמה ופענוח ZXing
+  var inp=document.createElement('input');
+  inp.type='file';
+  inp.accept='image/*';
+  inp.capture='environment';
+  inp.style.display='none';
+  document.body.appendChild(inp);
+  inp.onchange=function(){
+    var file=inp.files&&inp.files[0];
+    document.body.removeChild(inp);
+    if(!file){if(onError)onError(new Error('בוטל'));return;}
+    var url=URL.createObjectURL(file);
+    if(typeof ZXing!=='undefined'&&ZXing.BrowserMultiFormatReader){
+      var reader=new ZXing.BrowserMultiFormatReader();
+      reader.decodeFromImageUrl(url).then(function(result){
+        URL.revokeObjectURL(url);
+        onFound(result.getText());
+      }).catch(function(){
+        URL.revokeObjectURL(url);
+        if(onError)onError(new Error('לא נמצא ברקוד — נסה שוב'));
+      });
+    } else {
+      URL.revokeObjectURL(url);
+      if(onError)onError(new Error('ZXing לא נטען'));
     }
-    _scannerActive=false;
-    if(onError)onError(new Error('לא נתמך'));
-  }
-
-  if(typeof ZXing!=='undefined'&&ZXing.BrowserMultiFormatReader){
-    try{
-      _zxReader=new ZXing.BrowserMultiFormatReader();
-      var hints=new Map();
-      _zxReader.decodeFromConstraints(
-        {video:{facingMode:'environment'}},
-        videoEl,
-        function(result,err){
-          if(result&&_scannerActive){
-            stopCameraScan();
-            onFound(result.getText());
-          } else if(err&&!(err instanceof ZXing.NotFoundException)){
-            stopCameraScan();
-            fallbackBD();
-          }
-        }
-      );
-      return;
-    }catch(e){
-      _zxReader=null;
-    }
-  }
-  fallbackBD();
+  };
+  inp.oncancel=function(){document.body.removeChild(inp);};
+  inp.click();
 }
+
+function stopCameraScan2(){} // stub לתאימות
 
 function stopCameraScan(){
   _scannerActive=false;
