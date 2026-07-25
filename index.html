@@ -3657,34 +3657,50 @@ var _scannerActive=false, _zxReader=null;
 function startCameraScan(videoEl, onFound, onError){
   if(_scannerActive) return;
   _scannerActive=true;
-  // נסה ZXing קודם (עובד על Safari)
-  if(typeof ZXing!=='undefined'){
+  videoEl.setAttribute('playsinline','');
+  videoEl.setAttribute('muted','');
+
+  function fallbackBD(){
+    if(typeof BarcodeDetector!=='undefined'){
+      navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+        videoEl.srcObject=stream; videoEl.play();
+        var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});
+        var iv=setInterval(function(){
+          if(!_scannerActive){clearInterval(iv);return;}
+          bd.detect(videoEl).then(function(codes){
+            if(codes.length){clearInterval(iv);stopCameraScan();onFound(codes[0].rawValue);}
+          }).catch(function(){});
+        },300);
+      }).catch(function(e){_scannerActive=false;if(onError)onError(e);});
+      return;
+    }
+    _scannerActive=false;
+    if(onError)onError(new Error('לא נתמך'));
+  }
+
+  if(typeof ZXing!=='undefined'&&ZXing.BrowserMultiFormatReader){
     try{
       _zxReader=new ZXing.BrowserMultiFormatReader();
-      _zxReader.decodeFromVideoDevice(null,videoEl,function(result,err){
-        if(result){
-          stopCameraScan();
-          onFound(result.getText());
+      var hints=new Map();
+      _zxReader.decodeFromConstraints(
+        {video:{facingMode:'environment'}},
+        videoEl,
+        function(result,err){
+          if(result&&_scannerActive){
+            stopCameraScan();
+            onFound(result.getText());
+          } else if(err&&!(err instanceof ZXing.NotFoundException)){
+            stopCameraScan();
+            fallbackBD();
+          }
         }
-      });
+      );
       return;
-    }catch(e){}
+    }catch(e){
+      _zxReader=null;
+    }
   }
-  // fallback: BarcodeDetector (Chrome/Android)
-  if(typeof BarcodeDetector!=='undefined'){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
-      videoEl.srcObject=stream; videoEl.play();
-      var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});
-      var iv=setInterval(function(){
-        bd.detect(videoEl).then(function(codes){
-          if(codes.length){clearInterval(iv);stopCameraScan();onFound(codes[0].rawValue);}
-        }).catch(function(){});
-      },300);
-    }).catch(onError||function(){});
-    return;
-  }
-  _scannerActive=false;
-  if(onError) onError(new Error('לא נתמך'));
+  fallbackBD();
 }
 
 function stopCameraScan(){
