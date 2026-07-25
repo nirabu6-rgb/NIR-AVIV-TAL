@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
 <title>WeightStock — מלאי חכם לפי משקל</title>
 <style>
 /* ══════════════════════════════════════════════
@@ -3280,39 +3281,24 @@ function receiveSearch(){
   el.style.display='block';
 }
 function receiveScan(){
-  if(typeof BarcodeDetector==='undefined'){
-    var b=prompt('הכנס ברקוד ידנית:');
-    if(b){document.getElementById('receive-search').value=b;receiveSearch();}
-    return;
-  }
   var v=document.createElement('video');
+  v.setAttribute('playsinline','');
   v.style.cssText='position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:9999;background:#000;';
   var ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:60px;';
   ov.innerHTML='<button style="background:#fff;border:none;border-radius:20px;padding:12px 30px;font-size:16px;font-weight:700;cursor:pointer;">ביטול</button>';
   document.body.appendChild(v); document.body.appendChild(ov);
-  var stream;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){
-    stream=s; v.srcObject=s; v.play();
-    var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a']});
-    var interval=setInterval(function(){
-      bd.detect(v).then(function(codes){
-        if(codes.length){
-          clearInterval(interval);
-          stream.getTracks().forEach(function(t){t.stop();});
-          document.body.removeChild(v); document.body.removeChild(ov);
-          var code=codes[0].rawValue;
-          document.getElementById('receive-search').value=code;
-          receiveSearch();
-        }
-      });
-    },400);
-    ov.querySelector('button').onclick=function(){
-      clearInterval(interval);
-      stream.getTracks().forEach(function(t){t.stop();});
-      document.body.removeChild(v); document.body.removeChild(ov);
-    };
+  startCameraScan(v, function(code){
+    document.body.removeChild(v); document.body.removeChild(ov);
+    document.getElementById('receive-search').value=code;
+    receiveSearch();
+  }, function(){
+    document.body.removeChild(v); document.body.removeChild(ov);
   });
+  ov.querySelector('button').onclick=function(){
+    stopCameraScan();
+    document.body.removeChild(v); document.body.removeChild(ov);
+  };
 }
 window.receiveSearch=receiveSearch; window.receiveReset=receiveReset; window.receiveScan=receiveScan; window.receivePickShelf=receivePickShelf;
 function saveReceive(){
@@ -3346,27 +3332,18 @@ function openBarcode(){
   document.getElementById('barcode-manual-input').value='';
   var vw=document.getElementById('barcode-video-wrap');
   var sta=document.getElementById('barcode-status');
-  if(typeof BarcodeDetector!=='undefined'&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia||(typeof ZXing!=='undefined')){
     sta.textContent='מפעיל מצלמה...';
     vw.style.display='flex';
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
-      _barcodeStream=stream;
-      var vid=document.getElementById('barcode-video');
-      vid.srcObject=stream;
-      vid.play();
-      sta.textContent='מצלמה פעילה — מחפש ברקוד...';
-      var detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});
-      var interval=setInterval(function(){
-        if(!_barcodeStream){clearInterval(interval);return;}
-        detector.detect(vid).then(function(codes){
-          if(codes.length){
-            clearInterval(interval);
-            document.getElementById('barcode-manual-input').value=codes[0].rawValue;
-            sta.textContent='✓ ברקוד נמצא: '+codes[0].rawValue;
-            stopBarcodeStream();
-          }
-        }).catch(function(){});
-      },300);
+    var vid=document.getElementById('barcode-video');
+    startCameraScan(vid, function(code){
+      document.getElementById('barcode-manual-input').value=code;
+      sta.textContent='✓ ברקוד נמצא: '+code;
+      stopBarcodeStream();
+    }, function(){
+      sta.textContent='לא ניתן לגשת למצלמה — הזן ידנית';
+      vw.style.display='none';
+    });
     }).catch(function(){
       vw.style.display='none';
       sta.textContent='לא ניתן להפעיל מצלמה — הזן ברקוד ידנית';
@@ -3415,30 +3392,14 @@ function initQuickScanScreen(){
 function startQuickScan(){
   if(_qsStream){stopQuickScan();return;}
   var qs=document.getElementById('qs-status');
-  if(typeof BarcodeDetector==='undefined'||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    if(qs)qs.textContent='המצלמה אינה נתמכת — הזן ברקוד ידנית';
-    return;
-  }
   var vw=document.getElementById('qs-video-wrap'), vid=document.getElementById('qs-video');
   if(vw)vw.style.display='block';
   if(qs)qs.textContent='מפעיל מצלמה...';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
-    _qsStream=stream;
-    vid.srcObject=stream;
-    vid.play();
-    if(qs)qs.textContent='מצלמה פעילה — מחפש ברקוד...';
-    var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a']});
-    _qsInterval=setInterval(function(){
-      bd.detect(vid).then(function(codes){
-        if(codes.length){
-          var code=codes[0].rawValue;
-          stopQuickScan();
-          var m=document.getElementById('qs-manual'); if(m)m.value=code;
-          qsSearchBarcode(code);
-        }
-      }).catch(function(){});
-    },300);
-  }).catch(function(){
+  startCameraScan(vid, function(code){
+    stopQuickScan();
+    var m=document.getElementById('qs-manual'); if(m)m.value=code;
+    qsSearchBarcode(code);
+  }, function(){
     if(vw)vw.style.display='none';
     if(qs)qs.textContent='לא ניתן לגשת למצלמה — הזן ברקוד ידנית';
   });
@@ -3689,6 +3650,50 @@ document.addEventListener('keydown',function(e){
 /* ════════════════════════════════════════════════════
    CUSTOM THEME COLORS
 ════════════════════════════════════════════════════ */
+
+/* ── סריקת ברקוד אחידה (ZXing + BarcodeDetector fallback) ── */
+var _scannerActive=false, _zxReader=null;
+
+function startCameraScan(videoEl, onFound, onError){
+  if(_scannerActive) return;
+  _scannerActive=true;
+  // נסה ZXing קודם (עובד על Safari)
+  if(typeof ZXing!=='undefined'){
+    try{
+      _zxReader=new ZXing.BrowserMultiFormatReader();
+      _zxReader.decodeFromVideoDevice(null,videoEl,function(result,err){
+        if(result){
+          stopCameraScan();
+          onFound(result.getText());
+        }
+      });
+      return;
+    }catch(e){}
+  }
+  // fallback: BarcodeDetector (Chrome/Android)
+  if(typeof BarcodeDetector!=='undefined'){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+      videoEl.srcObject=stream; videoEl.play();
+      var bd=new BarcodeDetector({formats:['ean_13','ean_8','code_128','qr_code','upc_a','upc_e']});
+      var iv=setInterval(function(){
+        bd.detect(videoEl).then(function(codes){
+          if(codes.length){clearInterval(iv);stopCameraScan();onFound(codes[0].rawValue);}
+        }).catch(function(){});
+      },300);
+    }).catch(onError||function(){});
+    return;
+  }
+  _scannerActive=false;
+  if(onError) onError(new Error('לא נתמך'));
+}
+
+function stopCameraScan(){
+  _scannerActive=false;
+  if(_zxReader){try{_zxReader.reset();}catch(e){}  _zxReader=null;}
+}
+window.startCameraScan=startCameraScan;
+window.stopCameraScan=stopCameraScan;
+
 function setAccent(color){
   document.documentElement.style.setProperty('--accent',color);
   LS.set('accent',color);
