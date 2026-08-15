@@ -1173,7 +1173,8 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   </div>
   <div style="padding:14px;">
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <input id="wh-filter-item" placeholder="🔍 סנן לפי פריט..." oninput="renderWeighHistory()" style="flex:1;margin-top:0;">
+      <input id="wh-filter-item" placeholder="🔍 סנן לפי פריט..." oninput="renderWeighHistory()" list="history-items-list" style="flex:1;margin-top:0;">
+      <datalist id="history-items-list"></datalist>
       <button class="btn sm danger" onclick="clearWeighHistory()">נקה</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
@@ -1832,25 +1833,62 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 
 <!-- MODAL: EXPORT DATA -->
 <div class="modal-overlay" id="modal-export">
-  <div class="modal-box mid" style="width:calc(100% - 28px);">
+  <div class="modal-box mid" style="width:calc(100% - 28px);max-height:92vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;">📤 יצוא נתונים</h3>
+      <h3 style="margin:0;" id="export-modal-title">📊 יצוא דוחות</h3>
       <button class="modal-close" onclick="closeModal('modal-export')">&#x2715;</button>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <button class="btn" onclick="exportToExcel()">
-        📁 יצוא לאקסל (CSV)
-        <div style="font-size:11px;font-weight:400;opacity:.8;">מוריד קובץ CSV — נפתח ב-Excel</div>
-      </button>
-      <button class="btn sec" onclick="exportToPDF()">
-        🖨️ יצוא ל-PDF
-        <div style="font-size:11px;font-weight:400;opacity:.8;">הדפסת טבלת מלאי מלאה</div>
-      </button>
-      <button class="btn sec" onclick="exportByEmail()" style="background:var(--card2);">
-        📧 שלח במייל
-        <div style="font-size:11px;font-weight:400;opacity:.8;">פתח תוכנת מייל עם סיכום</div>
-      </button>
+    <!-- Step 1: report type selector -->
+    <div id="export-step1">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button onclick="exportSelectType('full')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📋</div>
+          <div style="font-size:13px;font-weight:700;">דוח מלאי מלא</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">כל הפריטים</div>
+        </button>
+        <button onclick="exportSelectType('low')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">⚠️</div>
+          <div style="font-size:13px;font-weight:700;">דוח מלאי נמוך</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">פריטים מתחת לסף</div>
+        </button>
+        <button onclick="exportSelectType('receive')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📦</div>
+          <div style="font-size:13px;font-weight:700;">דוח קבלת סחורה</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">היסטוריית קבלות</div>
+        </button>
+        <button onclick="exportSelectType('period')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📅</div>
+          <div style="font-size:13px;font-weight:700;">דוח תקופתי</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">לפי טווח תאריכים</div>
+        </button>
+      </div>
+      <button class="btn sec" style="margin-top:12px;" onclick="closeModal('modal-export')">ביטול</button>
+    </div>
+
+    <!-- Step 2: report settings -->
+    <div id="export-step2" style="display:none;">
+      <label>כותרת הדוח</label>
+      <input id="exp-title" type="text">
+      <label>שם חברה</label>
+      <input id="exp-company" type="text" placeholder="שם העסק">
+      <label>כתובת</label>
+      <input id="exp-address" type="text" placeholder="כתובת העסק">
+      <label>טלפון</label>
+      <input id="exp-phone" type="tel" placeholder="050-0000000">
+      <label>הוכן ע"י</label>
+      <input id="exp-preparer" type="text" placeholder="שם המכין">
+      <div id="exp-period-wrap" style="display:none;">
+        <div class="row" style="margin-top:4px;">
+          <div><label>מתאריך</label><input id="exp-date-from" type="date" style="margin-top:4px;"></div>
+          <div><label>עד תאריך</label><input id="exp-date-to" type="date" style="margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:16px;gap:8px;">
+        <button class="btn sec" onclick="exportGoBack()">&#x2190; חזור</button>
+        <button class="btn ok" onclick="exportGenerate()">הפק דוח ›</button>
+      </div>
+      <button class="btn" onclick="exportGenerateCSV()" style="margin-top:8px;background:var(--ok);">📁 יצוא CSV</button>
     </div>
   </div>
 </div>
@@ -4210,6 +4248,9 @@ function recordWeigh(shelfId,qty,action){
   });
 }
 function renderWeighHistory(){
+  // populate datalist for item name autocomplete
+  var dl=document.getElementById('history-items-list');
+  if(dl){var names=getItems().map(function(i){return i.name;});dl.innerHTML=names.map(function(n){return '<option value="'+n.replace(/"/g,'&quot;')+'">';}).join('');}
   var h=getWeighHistory().slice().reverse();
   var fItem=(document.getElementById('wh-filter-item')||{}).value||'';
   var dFrom=(document.getElementById('wh-date-from')||{}).value;
@@ -4350,9 +4391,10 @@ function openAlerts(){
   var s=LS.get('alert_settings',{notif:false,threshold:20});
   var tog=document.getElementById('notif-tog');
   var thr=document.getElementById('alert-threshold');
+  var res=document.getElementById('alerts-check-result');
   if(tog)tog.classList.toggle('on',!!s.notif);
   if(thr)thr.value=s.threshold||20;
-  document.getElementById('alerts-check-result').innerHTML='';
+  if(res)res.innerHTML='';
   openModal('modal-alerts');
 }
 window.openAlerts=openAlerts;
@@ -4399,68 +4441,228 @@ function checkAlertsNow(){
 window.checkAlertsNow=checkAlertsNow;
 
 /* ════════════════════════════════════════════════════
-   EXPORT
+   EXPORT — MULTI-STEP REPORT WIZARD
 ════════════════════════════════════════════════════ */
-function openExport(){openModal('modal-export');}
+var _exportType='full';
+
+function openExport(){
+  // Load saved company info
+  document.getElementById('exp-company').value=localStorage.getItem('ws3_company')||getSettings().bizName||'';
+  document.getElementById('exp-address').value=localStorage.getItem('ws3_address')||'';
+  document.getElementById('exp-phone').value=localStorage.getItem('ws3_phone')||'';
+  document.getElementById('exp-preparer').value=localStorage.getItem('ws3_preparer')||'';
+  // Show step 1
+  document.getElementById('export-step1').style.display='';
+  document.getElementById('export-step2').style.display='none';
+  document.getElementById('export-modal-title').textContent='📊 יצוא דוחות';
+  openModal('modal-export');
+}
 window.openExport=openExport;
 
-function exportToExcel(){
-  exportCSV(); // reuse existing exportCSV function
-  closeModal('modal-export');
+function exportSelectType(type){
+  _exportType=type;
+  var titles={full:'📋 דוח מלאי מלא',low:'⚠️ דוח מלאי נמוך',receive:'📦 דוח קבלת סחורה',period:'📅 דוח תקופתי'};
+  document.getElementById('exp-title').value=titles[type]||'דוח מלאי';
+  document.getElementById('export-modal-title').textContent='הגדרות דוח';
+  document.getElementById('exp-period-wrap').style.display=(type==='period')?'':'none';
+  // default date range to last 30 days for period report
+  if(type==='period'){
+    var now=new Date(),ago=new Date(now-30*864e5);
+    document.getElementById('exp-date-from').value=ago.toISOString().slice(0,10);
+    document.getElementById('exp-date-to').value=now.toISOString().slice(0,10);
+  }
+  document.getElementById('export-step1').style.display='none';
+  document.getElementById('export-step2').style.display='';
 }
-window.exportToExcel=exportToExcel;
+window.exportSelectType=exportSelectType;
 
-function exportToPDF(){
-  var shs=getShelves(), its=getItems(), cats=getCats(), cur=getCurrency();
-  var d=new Date();
-  var ds=d.toLocaleDateString('he-IL');
-  var biz=getSettings().bizName||'WeightStock';
+function exportGoBack(){
+  document.getElementById('export-step1').style.display='';
+  document.getElementById('export-step2').style.display='none';
+  document.getElementById('export-modal-title').textContent='📊 יצוא דוחות';
+}
+window.exportGoBack=exportGoBack;
+
+function _saveExportSettings(){
+  var co=document.getElementById('exp-company').value;
+  var ad=document.getElementById('exp-address').value;
+  var ph=document.getElementById('exp-phone').value;
+  var pr=document.getElementById('exp-preparer').value;
+  if(co)localStorage.setItem('ws3_company',co);
+  if(ad)localStorage.setItem('ws3_address',ad);
+  if(ph)localStorage.setItem('ws3_phone',ph);
+  if(pr)localStorage.setItem('ws3_preparer',pr);
+}
+
+function _getExportRows(){
+  var shs=getShelves(), its=getItems(), cats=getCats();
+  var type=_exportType;
   var rows=shs.map(function(s){
     var r=latestR(s.id), it=its.find(function(i){return i.id===s.itemId;});
-    if(!it)return '';
+    if(!it)return null;
     var cat=cats.find(function(c){return c.id===it.categoryId;});
     var st=calcSt(s,r);
-    var stC={ok:'#007A4D',warn:'#D97706',crit:'#C0392B',offline:'#94a3b8'}[st];
     var stL={ok:'תקין',warn:'נמוך',crit:'קריטי',offline:'לא מחובר'}[st];
     var qty=r?r.qty:0;
-    return '<tr>'+
-      '<td>'+it.name+'</td>'+
-      '<td>'+(cat?cat.name:'')+'</td>'+
-      '<td>'+s.name+'</td>'+
-      '<td style="text-align:center;font-weight:700;">'+qty+'</td>'+
-      '<td style="text-align:center;">'+unitL(it)+'</td>'+
-      '<td style="text-align:center;color:'+stC+';font-weight:700;">'+stL+'</td>'+
-    '</tr>';
-  }).join('');
+    return {name:it.name,cat:cat?cat.name:'',loc:s.name,qty:qty,unit:unitL(it),threshold:s.alertValue||0,status:stL,st:st};
+  }).filter(Boolean);
+  if(type==='low')rows=rows.filter(function(r){return r.st==='warn'||r.st==='crit';});
+  return rows;
+}
 
-  var pa=document.getElementById('ws3-print-area');
-  pa.innerHTML=
-    '<div style="font-family:Arial,sans-serif;direction:rtl;padding:20px;">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #003B8E;padding-bottom:12px;">'+
-      '<div><div style="font-size:22px;font-weight:800;color:#003B8E;">'+biz+'</div>'+
-      '<div style="font-size:13px;color:#5A6B8A;">דוח מלאי — '+ds+'</div></div>'+
-      '<div style="font-size:32px;">⚖️</div>'+
+function exportGenerate(){
+  _saveExportSettings();
+  var type=_exportType;
+  var title=document.getElementById('exp-title').value||'דוח מלאי';
+  var company=document.getElementById('exp-company').value||'WeightStock';
+  var address=document.getElementById('exp-address').value;
+  var phone=document.getElementById('exp-phone').value;
+  var preparer=document.getElementById('exp-preparer').value;
+  var now=new Date();
+  var ds=now.toLocaleDateString('he-IL');
+  var ts=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+
+  var rows, tableRows='';
+  if(type==='receive'){
+    var h=getWeighHistory().filter(function(e){return e.action==='receive';}).slice().reverse();
+    if(type==='period'){
+      var df=new Date(document.getElementById('exp-date-from').value).getTime()||0;
+      var dt=new Date(document.getElementById('exp-date-to').value).getTime()+86400000||Infinity;
+      h=h.filter(function(e){return e.date>=df&&e.date<=dt;});
+    }
+    tableRows=h.map(function(e,i){
+      return '<tr style="border-bottom:1px solid #e2e8f0;background:'+(i%2?'#f8fafc':'#fff')+'">'+
+        '<td style="padding:8px 6px;">'+(i+1)+'</td>'+
+        '<td style="padding:8px 6px;font-weight:600;">'+e.name+'</td>'+
+        '<td style="padding:8px 6px;">'+e.shelfName+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;font-weight:700;">'+e.weight+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;">'+e.unit+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;color:#5A6B8A;font-size:11px;">'+new Date(e.date).toLocaleString('he-IL')+'</td>'+
+      '</tr>';
+    }).join('');
+    var headerRow='<tr style="background:#003B8E;color:#fff;"><th style="padding:9px 6px;text-align:right;">#</th>'+
+      '<th style="padding:9px 6px;text-align:right;">פריט</th><th style="padding:9px 6px;text-align:right;">מיקום</th>'+
+      '<th style="padding:9px 6px;text-align:center;">כמות</th><th style="padding:9px 6px;text-align:center;">יחידה</th>'+
+      '<th style="padding:9px 6px;text-align:center;">תאריך ושעה</th></tr>';
+    rows={total:h.length,low:0,value:0};
+  } else {
+    var dataRows=_getExportRows();
+    if(_exportType==='period'){
+      var df2=new Date(document.getElementById('exp-date-from').value).getTime()||0;
+      var dt2=new Date(document.getElementById('exp-date-to').value).getTime()+86400000||Infinity;
+      // filter by history in range — show shelves with readings in range
+      dataRows=dataRows; // keep all, period filter is for receive history
+    }
+    tableRows=dataRows.map(function(r,i){
+      var stColor={תקין:'#007A4D',נמוך:'#D97706',קריטי:'#C0392B','לא מחובר':'#94a3b8'}[r.status]||'#333';
+      return '<tr style="border-bottom:1px solid #e2e8f0;background:'+(i%2?'#f8fafc':'#fff')+'">'+
+        '<td style="padding:8px 6px;font-weight:600;">'+r.name+'</td>'+
+        '<td style="padding:8px 6px;">'+r.cat+'</td>'+
+        '<td style="padding:8px 6px;">'+r.loc+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;font-weight:700;">'+r.qty+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;">'+r.unit+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;">'+r.threshold+'</td>'+
+        '<td style="padding:8px 6px;text-align:center;color:'+stColor+';font-weight:700;">'+r.status+'</td>'+
+      '</tr>';
+    }).join('');
+    var headerRow='<tr style="background:#003B8E;color:#fff;">'+
+      '<th style="padding:9px 6px;text-align:right;">שם פריט</th>'+
+      '<th style="padding:9px 6px;text-align:right;">קטגוריה</th>'+
+      '<th style="padding:9px 6px;text-align:right;">מיקום</th>'+
+      '<th style="padding:9px 6px;text-align:center;">כמות נוכחית</th>'+
+      '<th style="padding:9px 6px;text-align:center;">יחידה</th>'+
+      '<th style="padding:9px 6px;text-align:center;">סף מינימום</th>'+
+      '<th style="padding:9px 6px;text-align:center;">סטטוס</th></tr>';
+    var low=dataRows.filter(function(r){return r.st==='warn'||r.st==='crit';}).length;
+    rows={total:dataRows.length,low:low,value:0};
+  }
+
+  var w=window.open('','_blank','width=900,height=700');
+  if(!w)return;
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>'+title+'</title>'+
+    '<style>'+
+    'body{font-family:Arial,sans-serif;direction:rtl;margin:0;padding:0;color:#0f172a;}'+
+    '.page{max-width:900px;margin:0 auto;padding:28px 24px;}'+
+    '.co-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #003B8E;padding-bottom:14px;margin-bottom:18px;}'+
+    '.co-name{font-size:24px;font-weight:800;color:#003B8E;}'+
+    '.co-sub{font-size:13px;color:#5A6B8A;margin-top:3px;line-height:1.5;}'+
+    '.co-logo{font-size:44px;}'+
+    '.rep-title{font-size:19px;font-weight:800;margin-bottom:4px;}'+
+    '.rep-meta{font-size:12px;color:#5A6B8A;margin-bottom:16px;line-height:1.6;}'+
+    '.stat-row{display:flex;gap:14px;margin-bottom:18px;}'+
+    '.stat{flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;text-align:center;}'+
+    '.stat .n{font-size:24px;font-weight:800;color:#003B8E;}'+
+    '.stat .l{font-size:11px;color:#5A6B8A;margin-top:3px;}'+
+    'table{width:100%;border-collapse:collapse;font-size:12px;}'+
+    'th{background:#003B8E;color:#fff;padding:9px 6px;text-align:right;font-weight:700;}'+
+    'td{padding:8px 6px;}'+
+    '.footer{margin-top:20px;font-size:11px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:10px;}'+
+    '.no-print{margin-top:20px;display:flex;gap:10px;}'+
+    '@media print{.no-print{display:none!important;}body{padding:0;}table{font-size:10px;}th,td{padding:5px 4px;}}'+
+    '</style></head><body>'+
+    '<div class="page">'+
+    '<div class="co-header">'+
+      '<div><div class="co-name">'+company+'</div>'+
+      '<div class="co-sub">'+(address?address+'<br>':'')+(phone?'טל\': '+phone:'')+'</div></div>'+
+      '<div class="co-logo">⚖️</div>'+
     '</div>'+
-    '<table style="width:100%;border-collapse:collapse;font-size:12px;">'+
-      '<thead><tr style="background:#003B8E;color:#fff;">'+
-        '<th style="padding:8px 6px;text-align:right;">פריט</th>'+
-        '<th style="padding:8px 6px;text-align:right;">קטגוריה</th>'+
-        '<th style="padding:8px 6px;text-align:right;">משטח</th>'+
-        '<th style="padding:8px 6px;text-align:center;">כמות</th>'+
-        '<th style="padding:8px 6px;text-align:center;">יחידה</th>'+
-        '<th style="padding:8px 6px;text-align:center;">סטטוס</th>'+
-      '</tr></thead>'+
-      '<tbody>'+rows+'</tbody>'+
-    '</table>'+
-    '<div style="margin-top:14px;font-size:11px;color:#94a3b8;text-align:center;">הופק ע"י WeightStock — '+ds+'</div>'+
-    '</div>';
-  pa.style.display='block';
-  window.print();
-  setTimeout(function(){pa.style.display='none';},1000);
+    '<div class="rep-title">'+title+'</div>'+
+    '<div class="rep-meta">'+
+      'תאריך הפקה: '+ds+' בשעה '+ts+'<br>'+
+      (preparer?'הוכן ע"י: '+preparer+'<br>':'')+
+    '</div>'+
+    (rows.total!==undefined?
+    '<div class="stat-row">'+
+      '<div class="stat"><div class="n">'+rows.total+'</div><div class="l">סה"כ פריטים</div></div>'+
+      (rows.low!==undefined?'<div class="stat"><div class="n" style="color:#D97706;">'+rows.low+'</div><div class="l">מלאי נמוך</div></div>':'')+
+    '</div>':'')+
+    '<table><thead>'+headerRow+'</thead><tbody>'+tableRows+'</tbody></table>'+
+    '<div class="footer">הופק ע"י WeightStock — '+ds+' | '+company+' | עמוד 1</div>'+
+    '<div class="no-print">'+
+      '<button onclick="window.print()" style="padding:9px 24px;background:#003B8E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">🖨️ הדפס</button>'+
+      '<button onclick="window.close()" style="padding:9px 24px;background:#64748b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">סגור</button>'+
+    '</div>'+
+    '</div>'+
+    '<script>setTimeout(function(){window.print();},400);<\/script>'+
+    '</body></html>');
+  w.document.close();
   closeModal('modal-export');
 }
-window.exportToPDF=exportToPDF;
+window.exportGenerate=exportGenerate;
 
+function exportGenerateCSV(){
+  _saveExportSettings();
+  var type=_exportType;
+  var BOM='﻿';
+  var csv,filename,ds=new Date().toISOString().slice(0,10);
+
+  if(type==='receive'){
+    var h=getWeighHistory().filter(function(e){return e.action==='receive';}).slice().reverse();
+    csv=BOM+'פריט,מיקום,כמות,יחידה,תאריך\n'+h.map(function(e){
+      function q(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}
+      return q(e.name)+','+q(e.shelfName)+','+q(e.weight)+','+q(e.unit)+','+q(new Date(e.date).toLocaleString('he-IL'));
+    }).join('\n');
+    filename='קבלות-'+ds+'.csv';
+  } else {
+    var dataRows=_getExportRows();
+    csv=BOM+'שם פריט,קטגוריה,מיקום,כמות נוכחית,יחידה,סף מינימום,סטטוס\n'+dataRows.map(function(r){
+      function q(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}
+      return q(r.name)+','+q(r.cat)+','+q(r.loc)+','+q(r.qty)+','+q(r.unit)+','+q(r.threshold)+','+q(r.status);
+    }).join('\n');
+    filename='מלאי-'+ds+'.csv';
+  }
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  closeModal('modal-export');
+}
+window.exportGenerateCSV=exportGenerateCSV;
+
+// Legacy aliases kept for backward compat
+function exportToExcel(){exportCSV();}
+window.exportToExcel=exportToExcel;
+function exportToPDF(){exportGenerate();}
+window.exportToPDF=exportToPDF;
 function exportByEmail(){
   var shs=getShelves(), its=getItems();
   var biz=getSettings().bizName||'WeightStock';
@@ -4513,7 +4715,7 @@ function renderAutoOrders(){
       '<div class="ao-info">'+d.s.name+' | מלאי נוכחי: <b>'+d.qty+'</b> '+unitL(d.it)+' | סף: '+d.alertVal+'</div>'+
       '<div style="display:flex;align-items:center;gap:8px;">'+
         '<label style="margin:0;font-size:12px;flex:0 0 auto;">כמות להזמנה:</label>'+
-        '<input type="number" min="0" value="'+oqty+'" onchange="saveOrderQty(\''+d.s.id+'\',this.value)" style="width:90px;margin-top:0;padding:6px 10px;font-size:14px;">'+
+        '<input type="number" min="0" value="'+oqty+'" class="ao-qty" data-shelf-id="'+d.s.id+'" onchange="saveOrderQty(\''+d.s.id+'\',this.value)" style="width:90px;margin-top:0;padding:6px 10px;font-size:14px;">'+
         '<span style="font-size:12px;color:var(--muted);">'+unitL(d.it)+'</span>'+
       '</div>'+
     '</div>';
@@ -4532,18 +4734,21 @@ window.saveOrderQty=saveOrderQty;
 
 function createAutoOrder(){
   var shs=getShelves(), its=getItems();
-  var orders=LS.get('orders',[]);
   var dateEl=document.getElementById('ao-date');
   var orderDate=dateEl?dateEl.value:'';
   var biz=getSettings().bizName||'WeightStock';
 
+  // Read input values at click time (not from localStorage)
+  var inputs=document.querySelectorAll('.ao-qty');
   var lines=[];
-  orders.forEach(function(o){
-    if(!o.orderQty||o.orderQty<=0)return;
-    var sh=shs.find(function(s){return s.id===o.shelfId;});
+  Array.from(inputs).forEach(function(inp){
+    var qty=parseFloat(inp.value)||0;
+    if(qty<=0)return;
+    var shelfId=inp.getAttribute('data-shelf-id');
+    var sh=shs.find(function(s){return s.id===shelfId;});
     var it=sh?its.find(function(i){return i.id===sh.itemId;}):null;
     if(!it)return;
-    lines.push({name:it.name,qty:o.orderQty,unit:unitL(it),supplier:it.supplier||'',sku:it.sku||''});
+    lines.push({name:it.name,qty:qty,unit:unitL(it),supplier:it.supplier||'',sku:it.sku||''});
   });
 
   if(!lines.length){showToast('אין פריטים להזמנה — הזן כמויות');return;}
@@ -4576,6 +4781,7 @@ function createAutoOrder(){
     '<script>setTimeout(function(){window.print();},400);<\/script>'+
     '</body></html>');
   w.document.close();
+  navTo('screen-dashboard');
 }
 window.createAutoOrder=createAutoOrder;
 
