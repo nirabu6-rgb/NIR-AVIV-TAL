@@ -1205,12 +1205,19 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   <button class="navbtn active" id="nav-screen-dashboard" onclick="navTo('screen-dashboard')"><span class="ic">&#x1F4CA;</span>דשבורד</button>
   <button class="navbtn" id="nav-screen-items" onclick="navTo('screen-items')"><span class="ic">&#x1F4E6;</span>פריטים</button>
   <button class="navbtn" id="nav-screen-categories" onclick="navTo('screen-categories')"><span class="ic">&#x1F3F7;&#xFE0F;</span>קטגוריות</button>
-  <button class="navbtn" id="nav-screen-receive" onclick="openReceive()"><span class="ic">&#x1F4E5;</span>קבלת סחורה</button>
-  <button class="navbtn" id="nav-screen-more" onclick="openMore()"><span class="ic">&#x22EF;</span>עוד</button>
+  <button class="navbtn" id="nav-screen-reports" onclick="openReports()"><span class="ic">&#x1F4CA;</span>דוחות</button>
 </nav>
-<div id="fab-menu" style="display:none;position:fixed;bottom:140px;left:18px;z-index:60;background:var(--card);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.18);overflow:hidden;border:1px solid var(--border);min-width:180px;">
-  <button onclick="closeFabMenu();openSetupWizard();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:14px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⚖️ משטח שקילה חדש</button>
-  <button onclick="closeFabMenu();openSuppliers();" style="width:100%;background:none;border:none;padding:14px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">🏭 ספקים</button>
+<div id="fab-menu" style="display:none;position:fixed;bottom:140px;left:50%;transform:translateX(-50%);z-index:60;background:var(--card);border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.22);overflow:hidden;border:1px solid var(--border);min-width:260px;max-width:340px;width:90%;">
+  <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;">פעולות</div>
+  <button onclick="closeFabMenu();openReceive();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📥 קבלת סחורה</button>
+  <button onclick="closeFabMenu();navTo('screen-quickscan');" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📷 סריקה מהירה</button>
+  <button onclick="closeFabMenu();openSetupWizard();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⚖️ משטח שקילה חדש</button>
+  <button onclick="closeFabMenu();openSuppliers();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">🏭 ספקים</button>
+  <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;">כלים</div>
+  <button onclick="closeFabMenu();openAlerts();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">🔔 התראות מלאי נמוך</button>
+  <button onclick="closeFabMenu();openExport();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📤 יצוא נתונים</button>
+  <button onclick="closeFabMenu();navTo('screen-history');" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⏱️ היסטוריית שקילות</button>
+  <button onclick="closeFabMenu();openAutoOrders();" style="width:100%;background:none;border:none;padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📦 הזמנות אוטומטיות</button>
 </div>
 <button class="fab" id="main-fab" onclick="toggleFabMenu()">+</button>
 
@@ -1796,41 +1803,6 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   <div class="tv-grid" id="tv-grid"></div>
 </div>
 
-<!-- MODAL: MORE MENU -->
-<div class="modal-overlay" id="modal-more">
-  <div class="modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-      <h3 style="margin:0;">⋯ עוד אפשרויות</h3>
-      <button class="modal-close" onclick="closeModal('modal-more')">&#x2715;</button>
-    </div>
-    <div class="more-grid">
-      <button class="more-option" onclick="closeModal('modal-more');openReports()">
-        <span class="mo-ic">📊</span>
-        <span class="mo-lbl">דוחות וגרפים</span>
-      </button>
-      <button class="more-option" onclick="closeModal('modal-more');openAlerts()">
-        <span class="mo-ic">🔔</span>
-        <span class="mo-lbl">התראות מלאי נמוך</span>
-      </button>
-      <button class="more-option" onclick="closeModal('modal-more');openExport()">
-        <span class="mo-ic">📤</span>
-        <span class="mo-lbl">יצוא נתונים</span>
-      </button>
-      <button class="more-option" onclick="closeModal('modal-more');navTo('screen-history')">
-        <span class="mo-ic">⏱️</span>
-        <span class="mo-lbl">היסטוריית שקילות</span>
-      </button>
-      <button class="more-option" onclick="closeModal('modal-more');openAutoOrders()">
-        <span class="mo-ic">📦</span>
-        <span class="mo-lbl">הזמנות אוטומטיות</span>
-      </button>
-      <button class="more-option" onclick="closeModal('modal-more');navTo('screen-quickscan')">
-        <span class="mo-ic">📷</span>
-        <span class="mo-lbl">סריקה מהירה</span>
-      </button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL: ALERT SETTINGS -->
 <div class="modal-overlay" id="modal-alerts">
@@ -2521,6 +2493,7 @@ function navTo(id){
   document.querySelectorAll('.navbtn').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.sidebtn').forEach(function(b){b.classList.remove('active');});
   var nb=document.getElementById('nav-'+id); if(nb)nb.classList.add('active');
+  else if(id==='screen-reports')document.getElementById('nav-screen-reports').classList.add('active');
   else document.getElementById('nav-screen-dashboard').classList.add('active');
   var sb=document.getElementById('side-'+id); if(sb)sb.classList.add('active');
   else{var sd=document.getElementById('side-screen-dashboard');if(sd)sd.classList.add('active');}
@@ -4200,7 +4173,7 @@ window.printItemLabel=printItemLabel;
 /* ════════════════════════════════════════════════════
    MORE MENU
 ════════════════════════════════════════════════════ */
-function openMore(){openModal('modal-more');}
+
 window.openMore=openMore;
 
 /* ════════════════════════════════════════════════════
