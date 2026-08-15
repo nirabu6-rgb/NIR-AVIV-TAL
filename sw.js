@@ -1,14 +1,10 @@
-const CACHE = 'ws3-v1';
-const FILES = ['./weightstock.html', './zxing.min.js'];
+const CACHE = 'ws3-v2';
+const FILES = ['./index.html'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(c) {
-      return c.addAll(FILES.filter(function(f) {
-        return f !== './zxing.min.js'; // skip if not available
-      })).catch(function() {
-        return c.add('./weightstock.html');
-      });
+      return c.addAll(FILES).catch(function() {});
     })
   );
   self.skipWaiting();

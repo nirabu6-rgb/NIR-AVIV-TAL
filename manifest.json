@@ -2,7 +2,7 @@
   "name": "WeightStock",
   "short_name": "WeightStock",
   "description": "מערכת מלאי חכם לפי משקל",
-  "start_url": "./weightstock.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#001F5B",
   "theme_color": "#003B8E",
