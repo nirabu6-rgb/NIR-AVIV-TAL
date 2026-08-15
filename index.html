@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<link rel="manifest" href="manifest.json">
 <script src="zxing.min.js" async></script>
 <title>WeightStock — מלאי חכם לפי משקל</title>
+<script>
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 <style>
 /* ══════════════════════════════════════════════
    WeightStock — Bank Leumi + Max Financial Design
@@ -793,9 +801,84 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
 
 /* ── NUMBERS ── */
 [class*="qty"],[class*="num"],.recv-qty,.tv-qty{font-variant-numeric:tabular-nums;}
+
+/* ── MORE MENU ── */
+.more-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
+.more-option{
+  background:var(--card2);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:16px 8px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  font-family:inherit;
+  color:var(--text);
+  transition:background .15s,border-color .15s,box-shadow .15s;
+}
+.more-option:hover,.more-option:active{
+  background:var(--card);
+  border-color:var(--accent);
+  box-shadow:var(--shadow-md);
+}
+.more-option .mo-ic{font-size:28px;}
+.more-option .mo-lbl{font-size:11px;font-weight:700;text-align:center;line-height:1.3;color:var(--text);}
+
+/* ── OFFLINE BANNER ── */
+#offline-banner{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:9999;
+  background:#D97706;
+  color:#fff;
+  text-align:center;
+  padding:8px 16px;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+#offline-banner.show{display:block;}
+
+/* ── REPORTS SCREEN ── */
+.report-stat-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.report-stat{flex:1;min-width:80px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;}
+.report-stat .rs-num{font-size:22px;font-weight:800;color:var(--accent);}
+.report-stat .rs-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.chart-container{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.chart-container h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:700;}
+
+/* ── HISTORY SCREEN ── */
+.wh-item{
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:13px;
+}
+.wh-item:last-child{border-bottom:none;}
+.wh-action{font-size:10px;border-radius:8px;padding:2px 8px;font-weight:700;}
+.wh-action.weigh{background:rgba(0,59,142,.1);color:var(--accent);}
+.wh-action.receive{background:rgba(0,122,77,.1);color:var(--ok);}
+
+/* ── AUTO ORDERS SCREEN ── */
+.ao-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
+.ao-item .ao-name{font-weight:700;font-size:14px;margin-bottom:4px;}
+.ao-item .ao-info{font-size:12px;color:var(--muted);margin-bottom:8px;}
+
+/* ── PRINT STYLES FOR EXPORT ── */
+@media print{
+  body>*:not(#ws3-print-area){display:none!important;}
+  #ws3-print-area{display:block!important;position:static!important;}
+}
+#ws3-print-area{display:none;}
 </style>
 </head>
 <body>
+<div id="offline-banner">📴 אין חיבור לאינטרנט — עובד במצב לא מקוון</div>
 <div id="app">
 <div id="main-content">
 
@@ -1073,13 +1156,57 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   <div id="qs-result"></div>
 </div>
 
+<!-- ── SCREEN: REPORTS ── -->
+<div class="screen" id="screen-reports">
+  <div class="topbar">
+    <h2>📊 דוחות וגרפים</h2>
+    <button class="back-btn" onclick="closeModal('modal-more')">&#x2190; חזור</button>
+  </div>
+  <div id="reports-content" style="padding:14px;"></div>
+</div>
+
+<!-- ── SCREEN: WEIGH HISTORY ── -->
+<div class="screen" id="screen-history">
+  <div class="topbar">
+    <h2>⏱️ היסטוריית שקילות</h2>
+    <button class="back-btn" onclick="navTo('screen-dashboard')">&#x2190; חזור</button>
+  </div>
+  <div style="padding:14px;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input id="wh-filter-item" placeholder="🔍 סנן לפי פריט..." oninput="renderWeighHistory()" style="flex:1;margin-top:0;">
+      <button class="btn sm danger" onclick="clearWeighHistory()">נקה</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input id="wh-date-from" type="date" style="flex:1;margin-top:0;font-size:13px;" oninput="renderWeighHistory()">
+      <input id="wh-date-to" type="date" style="flex:1;margin-top:0;font-size:13px;" oninput="renderWeighHistory()">
+    </div>
+    <div id="wh-list" class="card" style="padding:0;overflow:hidden;"></div>
+  </div>
+</div>
+
+<!-- ── SCREEN: AUTO ORDERS ── -->
+<div class="screen" id="screen-autoorders">
+  <div class="topbar">
+    <h2>📦 הזמנות אוטומטיות</h2>
+    <button class="back-btn" onclick="navTo('screen-dashboard')">&#x2190; חזור</button>
+  </div>
+  <div style="padding:14px;">
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">תאריך הזמנה</div>
+      <input id="ao-date" type="date" style="margin-top:0;">
+    </div>
+    <div id="ao-list"></div>
+    <button class="btn ok" style="margin-top:12px;" onclick="createAutoOrder()">🖨️ צור הזמנה</button>
+  </div>
+</div>
+
 </div><!-- /main-content -->
 <nav class="bottomnav">
   <button class="navbtn active" id="nav-screen-dashboard" onclick="navTo('screen-dashboard')"><span class="ic">&#x1F4CA;</span>דשבורד</button>
   <button class="navbtn" id="nav-screen-items" onclick="navTo('screen-items')"><span class="ic">&#x1F4E6;</span>פריטים</button>
   <button class="navbtn" id="nav-screen-categories" onclick="navTo('screen-categories')"><span class="ic">&#x1F3F7;&#xFE0F;</span>קטגוריות</button>
   <button class="navbtn" id="nav-screen-receive" onclick="openReceive()"><span class="ic">&#x1F4E5;</span>קבלת סחורה</button>
-  <button class="navbtn" id="nav-screen-quickscan" onclick="navTo('screen-quickscan')"><span class="ic">&#x1F4F7;</span>סריקה</button>
+  <button class="navbtn" id="nav-screen-more" onclick="openMore()"><span class="ic">&#x22EF;</span>עוד</button>
 </nav>
 <div id="fab-menu" style="display:none;position:fixed;bottom:140px;left:18px;z-index:60;background:var(--card);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.18);overflow:hidden;border:1px solid var(--border);min-width:180px;">
   <button onclick="closeFabMenu();openSetupWizard();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:14px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⚖️ משטח שקילה חדש</button>
@@ -1669,6 +1796,96 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   <div class="tv-grid" id="tv-grid"></div>
 </div>
 
+<!-- MODAL: MORE MENU -->
+<div class="modal-overlay" id="modal-more">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <h3 style="margin:0;">⋯ עוד אפשרויות</h3>
+      <button class="modal-close" onclick="closeModal('modal-more')">&#x2715;</button>
+    </div>
+    <div class="more-grid">
+      <button class="more-option" onclick="closeModal('modal-more');openReports()">
+        <span class="mo-ic">📊</span>
+        <span class="mo-lbl">דוחות וגרפים</span>
+      </button>
+      <button class="more-option" onclick="closeModal('modal-more');openAlerts()">
+        <span class="mo-ic">🔔</span>
+        <span class="mo-lbl">התראות מלאי נמוך</span>
+      </button>
+      <button class="more-option" onclick="closeModal('modal-more');openExport()">
+        <span class="mo-ic">📤</span>
+        <span class="mo-lbl">יצוא נתונים</span>
+      </button>
+      <button class="more-option" onclick="closeModal('modal-more');navTo('screen-history')">
+        <span class="mo-ic">⏱️</span>
+        <span class="mo-lbl">היסטוריית שקילות</span>
+      </button>
+      <button class="more-option" onclick="closeModal('modal-more');openAutoOrders()">
+        <span class="mo-ic">📦</span>
+        <span class="mo-lbl">הזמנות אוטומטיות</span>
+      </button>
+      <button class="more-option" onclick="closeModal('modal-more');navTo('screen-quickscan')">
+        <span class="mo-ic">📷</span>
+        <span class="mo-lbl">סריקה מהירה</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ALERT SETTINGS -->
+<div class="modal-overlay" id="modal-alerts">
+  <div class="modal-box mid" style="width:calc(100% - 28px);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">🔔 התראות מלאי נמוך</h3>
+      <button class="modal-close" onclick="closeModal('modal-alerts')">&#x2715;</button>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <b>התראות דפדפן</b>
+        <div class="muted" style="font-size:11px;">שלח נוטיפיקציה כשמלאי נמוך</div>
+      </div>
+      <button class="toggle" id="notif-tog" onclick="toggleBrowserNotif()"><span class="knob"></span></button>
+    </div>
+
+    <label>סף התראה גלובלי (%)</label>
+    <input id="alert-threshold" type="number" min="1" max="100" value="20" style="margin-bottom:12px;">
+    <div class="muted" style="font-size:12px;margin-bottom:14px;">כשהמלאי יורד מתחת לאחוז זה מהסף המוגדר, תוצג התראה</div>
+
+    <button class="btn" onclick="saveAlertSettings()">שמור הגדרות</button>
+    <button class="btn sec" style="margin-top:8px;" onclick="checkAlertsNow()">🔍 בדוק עכשיו</button>
+    <div id="alerts-check-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- MODAL: EXPORT DATA -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal-box mid" style="width:calc(100% - 28px);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">📤 יצוא נתונים</h3>
+      <button class="modal-close" onclick="closeModal('modal-export')">&#x2715;</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn" onclick="exportToExcel()">
+        📁 יצוא לאקסל (CSV)
+        <div style="font-size:11px;font-weight:400;opacity:.8;">מוריד קובץ CSV — נפתח ב-Excel</div>
+      </button>
+      <button class="btn sec" onclick="exportToPDF()">
+        🖨️ יצוא ל-PDF
+        <div style="font-size:11px;font-weight:400;opacity:.8;">הדפסת טבלת מלאי מלאה</div>
+      </button>
+      <button class="btn sec" onclick="exportByEmail()" style="background:var(--card2);">
+        📧 שלח במייל
+        <div style="font-size:11px;font-weight:400;opacity:.8;">פתח תוכנת מייל עם סיכום</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT AREA FOR PDF EXPORT -->
+<div id="ws3-print-area"></div>
+
 <!-- SIDEBAR NAV (desktop) -->
 <nav id="sidebar-nav" style="display:none;">
   <div style="font-size:20px;font-weight:800;color:var(--accent);padding:10px 14px 18px;border-bottom:1px solid var(--border);margin-bottom:8px;">⚖️ WeightStock</div>
@@ -1677,6 +1894,9 @@ label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-top
   <button class="sidebtn" id="side-screen-categories" onclick="navTo('screen-categories')"><span class="ic">🏷️</span>קטגוריות</button>
   <button class="sidebtn" id="side-screen-alerts" onclick="navTo('screen-alerts')"><span class="ic">🔔</span>התראות</button>
   <button class="sidebtn" onclick="openReceive()"><span class="ic">📥</span>קבלת סחורה</button>
+  <button class="sidebtn" id="side-screen-quickscan" onclick="navTo('screen-quickscan')"><span class="ic">📷</span>סריקה מהירה</button>
+  <button class="sidebtn" id="side-screen-reports" onclick="openReports()"><span class="ic">📊</span>דוחות</button>
+  <button class="sidebtn" id="side-screen-history" onclick="navTo('screen-history')"><span class="ic">⏱️</span>היסטוריה</button>
   <div style="flex:1;"></div>
   <button class="sidebtn" onclick="openSettings()"><span class="ic">⚙️</span>הגדרות</button>
 </nav>
@@ -2309,6 +2529,9 @@ function navTo(id){
   if(id==='screen-categories')renderCatsSc();
   if(id==='screen-alerts')renderAlerts();
   if(id==='screen-quickscan')initQuickScanScreen();
+  if(id==='screen-history')renderWeighHistory();
+  if(id==='screen-autoorders')renderAutoOrders();
+  if(id==='screen-reports')renderReports();
 }
 window.navTo=navTo;
 function openModal(id){document.getElementById(id).classList.add('show');}
@@ -3369,6 +3592,8 @@ function saveReceive(){
   }
   renderDash();
   if(activeSc==='screen-shelf-detail')renderSh(id);
+  // record in weigh history
+  if(nr){recordWeigh(id,curQty+recvd,'receive');}
   closeModal('modal-receive');
   document.getElementById('receive-qty').value='';
 }
@@ -3972,6 +4197,416 @@ function printItemLabel(){
 }
 window.printItemLabel=printItemLabel;
 
+/* ════════════════════════════════════════════════════
+   MORE MENU
+════════════════════════════════════════════════════ */
+function openMore(){openModal('modal-more');}
+window.openMore=openMore;
+
+/* ════════════════════════════════════════════════════
+   OFFLINE INDICATOR
+════════════════════════════════════════════════════ */
+function updateOnlineStatus(){
+  var banner=document.getElementById('offline-banner');
+  if(banner)banner.classList.toggle('show',!navigator.onLine);
+}
+window.addEventListener('online',updateOnlineStatus);
+window.addEventListener('offline',updateOnlineStatus);
+
+/* ════════════════════════════════════════════════════
+   WEIGH HISTORY
+════════════════════════════════════════════════════ */
+function getWeighHistory(){return LS.get('weigh_history',[]);}
+function addWeighHistory(entry){
+  var h=getWeighHistory();
+  h.push(entry);
+  if(h.length>200)h=h.slice(-200);
+  LS.set('weigh_history',h);
+}
+function recordWeigh(shelfId,qty,action){
+  var shs=getShelves(), its=getItems();
+  var sh=shs.find(function(s){return s.id===shelfId;});
+  var it=sh?its.find(function(i){return i.id===sh.itemId;}):null;
+  addWeighHistory({
+    id:'wh'+Date.now(),
+    name:it?it.name:(sh?sh.name:'—'),
+    shelfName:sh?sh.name:'—',
+    weight:qty,
+    unit:it?unitL(it):'יחידות',
+    date:Date.now(),
+    action:action||'weigh'
+  });
+}
+function renderWeighHistory(){
+  var h=getWeighHistory().slice().reverse();
+  var fItem=(document.getElementById('wh-filter-item')||{}).value||'';
+  var dFrom=(document.getElementById('wh-date-from')||{}).value;
+  var dTo=(document.getElementById('wh-date-to')||{}).value;
+  if(fItem)h=h.filter(function(e){return e.name&&e.name.indexOf(fItem)>=0;});
+  if(dFrom){var df=new Date(dFrom).getTime();h=h.filter(function(e){return e.date>=df;});}
+  if(dTo){var dt=new Date(dTo).getTime()+86400000;h=h.filter(function(e){return e.date<=dt;});}
+  var el=document.getElementById('wh-list');if(!el)return;
+  if(!h.length){el.innerHTML='<div class="empty"><div class="ic">⏱️</div><div>אין היסטוריית שקילות עדיין</div></div>';return;}
+  el.innerHTML=h.slice(0,50).map(function(e){
+    var aClass=e.action==='receive'?'receive':'weigh';
+    var aLbl=e.action==='receive'?'קבלה':'שקילה';
+    return '<div class="wh-item">'+
+      '<span class="wh-action '+aClass+'">'+aLbl+'</span>'+
+      '<div style="flex:1;"><div style="font-weight:600;">'+e.name+'</div>'+
+      '<div class="muted" style="font-size:11px;">'+e.shelfName+'</div></div>'+
+      '<div style="text-align:left;font-size:12px;">'+
+        '<div style="font-weight:700;">'+e.weight+' '+e.unit+'</div>'+
+        '<div class="muted">'+fmtTs(e.date)+'</div>'+
+      '</div></div>';
+  }).join('');
+}
+function clearWeighHistory(){
+  if(!confirm('למחוק את כל היסטוריית השקילות?'))return;
+  LS.set('weigh_history',[]);
+  renderWeighHistory();
+}
+window.renderWeighHistory=renderWeighHistory;
+window.clearWeighHistory=clearWeighHistory;
+
+/* ════════════════════════════════════════════════════
+   REPORTS
+════════════════════════════════════════════════════ */
+function openReports(){navTo('screen-reports');renderReports();}
+window.openReports=openReports;
+
+function renderReports(){
+  var el=document.getElementById('reports-content');if(!el)return;
+  var shs=getShelves(), its=getItems(), cats=getCats();
+  var total=shs.length, low=0, totalWeight=0;
+  shs.forEach(function(s){
+    var r=latestR(s.id);
+    if(r){totalWeight+=r.netWeight||0;}
+    var st=calcSt(s,r);
+    if(st==='warn'||st==='crit')low++;
+  });
+
+  // top 5 by current qty*weight
+  var ranked=shs.map(function(s){
+    var r=latestR(s.id);
+    var it=its.find(function(i){return i.id===s.itemId;});
+    return {name:it?it.name:s.name,weight:r?r.netWeight||0:0};
+  }).sort(function(a,b){return b.weight-a.weight;}).slice(0,5);
+
+  var maxW=ranked.length?ranked[0].weight||1:1;
+  var barChart=ranked.map(function(item){
+    var pct=Math.round(item.weight/maxW*100);
+    return '<div style="margin-bottom:8px;">'+
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">'+
+        '<span style="font-weight:600;">'+item.name+'</span>'+
+        '<span class="muted">'+fmtW(item.weight)+'</span>'+
+      '</div>'+
+      '<div style="background:var(--card2);border-radius:4px;height:10px;overflow:hidden;">'+
+        '<div style="width:'+pct+'%;height:100%;background:var(--accent);border-radius:4px;transition:width .4s;"></div>'+
+      '</div></div>';
+  }).join('');
+
+  // category breakdown
+  var catMap={};
+  shs.forEach(function(s){
+    var r=latestR(s.id);
+    var it=its.find(function(i){return i.id===s.itemId;});
+    var cat=it?cats.find(function(c){return c.id===it.categoryId;}):null;
+    var catName=cat?cat.name:'ללא קטגוריה';
+    if(!catMap[catName])catMap[catName]={name:catName,color:cat?cat.color:'#94a3b8',count:0,weight:0};
+    catMap[catName].count++;
+    catMap[catName].weight+=(r?r.netWeight||0:0);
+  });
+  var catList=Object.values(catMap).sort(function(a,b){return b.weight-a.weight;});
+  var totalCatW=catList.reduce(function(s,c){return s+c.weight;},0)||1;
+
+  // SVG donut
+  var donutSVG=(function(){
+    var cx=70,cy=70,r=55,ri=35,total2=totalCatW,start=0;
+    var paths='';
+    catList.forEach(function(cat){
+      var sweep=cat.weight/total2*Math.PI*2;
+      if(sweep<0.01)return;
+      var x1=cx+r*Math.sin(start), y1=cy-r*Math.cos(start);
+      var x2=cx+r*Math.sin(start+sweep), y2=cy-r*Math.cos(start+sweep);
+      var x3=cx+ri*Math.sin(start+sweep), y3=cy-ri*Math.cos(start+sweep);
+      var x4=cx+ri*Math.sin(start), y4=cy-ri*Math.cos(start);
+      var lg=sweep>Math.PI?1:0;
+      paths+='<path d="M'+x1.toFixed(1)+','+y1.toFixed(1)+
+        ' A'+r+','+r+' 0 '+lg+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+
+        ' L'+x3.toFixed(1)+','+y3.toFixed(1)+
+        ' A'+ri+','+ri+' 0 '+lg+',0 '+x4.toFixed(1)+','+y4.toFixed(1)+
+        ' Z" fill="'+cat.color+'" opacity="0.85"/>';
+      start+=sweep;
+    });
+    return '<svg width="140" height="140" viewBox="0 0 140 140">'+paths+'</svg>';
+  })();
+
+  var catLegend=catList.map(function(cat){
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;">'+
+      '<span style="width:12px;height:12px;border-radius:3px;background:'+cat.color+';flex:0 0 12px;"></span>'+
+      '<span style="flex:1;">'+cat.name+'</span>'+
+      '<span class="muted">'+Math.round(cat.weight/totalCatW*100)+'%</span>'+
+    '</div>';
+  }).join('');
+
+  el.innerHTML=
+    '<div class="report-stat-row">'+
+      '<div class="report-stat"><div class="rs-num">'+total+'</div><div class="rs-lbl">משטחים</div></div>'+
+      '<div class="report-stat"><div class="rs-num" style="color:var(--warn);">'+low+'</div><div class="rs-lbl">מלאי נמוך</div></div>'+
+      '<div class="report-stat"><div class="rs-num" style="font-size:15px;">'+fmtW(totalWeight)+'</div><div class="rs-lbl">סה"כ משקל</div></div>'+
+    '</div>'+
+
+    '<div class="chart-container">'+
+      '<h4>TOP 5 — לפי משקל</h4>'+
+      barChart+
+    '</div>'+
+
+    '<div class="chart-container">'+
+      '<h4>פילוח לפי קטגוריה</h4>'+
+      '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">'+
+        donutSVG+
+        '<div style="flex:1;min-width:120px;">'+catLegend+'</div>'+
+      '</div>'+
+    '</div>';
+}
+window.renderReports=renderReports;
+
+/* ════════════════════════════════════════════════════
+   ALERT SETTINGS
+════════════════════════════════════════════════════ */
+function openAlerts(){
+  var s=LS.get('alert_settings',{notif:false,threshold:20});
+  var tog=document.getElementById('notif-tog');
+  var thr=document.getElementById('alert-threshold');
+  if(tog)tog.classList.toggle('on',!!s.notif);
+  if(thr)thr.value=s.threshold||20;
+  document.getElementById('alerts-check-result').innerHTML='';
+  openModal('modal-alerts');
+}
+window.openAlerts=openAlerts;
+
+function toggleBrowserNotif(){
+  var tog=document.getElementById('notif-tog');
+  if(!tog)return;
+  if(!tog.classList.contains('on')){
+    Notification.requestPermission().then(function(p){
+      if(p==='granted'){tog.classList.add('on');}
+      else{showToast('הרשאת התראות נדחתה');}
+    });
+  } else {
+    tog.classList.remove('on');
+  }
+}
+window.toggleBrowserNotif=toggleBrowserNotif;
+
+function saveAlertSettings(){
+  var tog=document.getElementById('notif-tog');
+  var thr=parseInt(document.getElementById('alert-threshold').value)||20;
+  LS.set('alert_settings',{notif:tog&&tog.classList.contains('on'),threshold:thr});
+  showToast('✓ הגדרות התראות נשמרו');
+}
+window.saveAlertSettings=saveAlertSettings;
+
+function checkAlertsNow(){
+  var shs=getShelves(), its=getItems();
+  var low=[];
+  shs.forEach(function(s){
+    var r=latestR(s.id);
+    var st=calcSt(s,r);
+    if(st==='warn'||st==='crit'){
+      var it=its.find(function(i){return i.id===s.itemId;});
+      low.push({name:it?it.name:s.name,shelf:s.name,st:st});
+    }
+  });
+  var el=document.getElementById('alerts-check-result');
+  if(!low.length){el.innerHTML='<div class="hwok">✓ כל הפריטים בסדר — אין מלאי נמוך</div>';return;}
+  el.innerHTML='<div class="hwwarn" style="margin-top:8px;"><b>פריטים עם מלאי נמוך:</b><ul style="margin:8px 0 0;padding-right:18px;font-size:13px;">'+
+    low.map(function(x){return '<li>'+(x.st==='crit'?'🔴':'🟡')+' '+x.name+' — '+x.shelf+'</li>';}).join('')+
+  '</ul></div>';
+}
+window.checkAlertsNow=checkAlertsNow;
+
+/* ════════════════════════════════════════════════════
+   EXPORT
+════════════════════════════════════════════════════ */
+function openExport(){openModal('modal-export');}
+window.openExport=openExport;
+
+function exportToExcel(){
+  exportCSV(); // reuse existing exportCSV function
+  closeModal('modal-export');
+}
+window.exportToExcel=exportToExcel;
+
+function exportToPDF(){
+  var shs=getShelves(), its=getItems(), cats=getCats(), cur=getCurrency();
+  var d=new Date();
+  var ds=d.toLocaleDateString('he-IL');
+  var biz=getSettings().bizName||'WeightStock';
+  var rows=shs.map(function(s){
+    var r=latestR(s.id), it=its.find(function(i){return i.id===s.itemId;});
+    if(!it)return '';
+    var cat=cats.find(function(c){return c.id===it.categoryId;});
+    var st=calcSt(s,r);
+    var stC={ok:'#007A4D',warn:'#D97706',crit:'#C0392B',offline:'#94a3b8'}[st];
+    var stL={ok:'תקין',warn:'נמוך',crit:'קריטי',offline:'לא מחובר'}[st];
+    var qty=r?r.qty:0;
+    return '<tr>'+
+      '<td>'+it.name+'</td>'+
+      '<td>'+(cat?cat.name:'')+'</td>'+
+      '<td>'+s.name+'</td>'+
+      '<td style="text-align:center;font-weight:700;">'+qty+'</td>'+
+      '<td style="text-align:center;">'+unitL(it)+'</td>'+
+      '<td style="text-align:center;color:'+stC+';font-weight:700;">'+stL+'</td>'+
+    '</tr>';
+  }).join('');
+
+  var pa=document.getElementById('ws3-print-area');
+  pa.innerHTML=
+    '<div style="font-family:Arial,sans-serif;direction:rtl;padding:20px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #003B8E;padding-bottom:12px;">'+
+      '<div><div style="font-size:22px;font-weight:800;color:#003B8E;">'+biz+'</div>'+
+      '<div style="font-size:13px;color:#5A6B8A;">דוח מלאי — '+ds+'</div></div>'+
+      '<div style="font-size:32px;">⚖️</div>'+
+    '</div>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:12px;">'+
+      '<thead><tr style="background:#003B8E;color:#fff;">'+
+        '<th style="padding:8px 6px;text-align:right;">פריט</th>'+
+        '<th style="padding:8px 6px;text-align:right;">קטגוריה</th>'+
+        '<th style="padding:8px 6px;text-align:right;">משטח</th>'+
+        '<th style="padding:8px 6px;text-align:center;">כמות</th>'+
+        '<th style="padding:8px 6px;text-align:center;">יחידה</th>'+
+        '<th style="padding:8px 6px;text-align:center;">סטטוס</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+    '</table>'+
+    '<div style="margin-top:14px;font-size:11px;color:#94a3b8;text-align:center;">הופק ע"י WeightStock — '+ds+'</div>'+
+    '</div>';
+  pa.style.display='block';
+  window.print();
+  setTimeout(function(){pa.style.display='none';},1000);
+  closeModal('modal-export');
+}
+window.exportToPDF=exportToPDF;
+
+function exportByEmail(){
+  var shs=getShelves(), its=getItems();
+  var biz=getSettings().bizName||'WeightStock';
+  var d=new Date().toLocaleDateString('he-IL');
+  var lines=['דוח מלאי '+biz+' — '+d,''];
+  shs.forEach(function(s){
+    var r=latestR(s.id), it=its.find(function(i){return i.id===s.itemId;});
+    if(!it)return;
+    var st=calcSt(s,r);
+    var stL={ok:'תקין',warn:'נמוך',crit:'קריטי',offline:'לא מחובר'}[st];
+    lines.push('• '+it.name+': '+(r?r.qty:0)+' '+unitL(it)+' ('+stL+')');
+  });
+  var body=encodeURIComponent(lines.join('\n'));
+  var subject=encodeURIComponent('דוח מלאי — '+biz+' — '+d);
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+  closeModal('modal-export');
+}
+window.exportByEmail=exportByEmail;
+
+/* ════════════════════════════════════════════════════
+   AUTO ORDERS
+════════════════════════════════════════════════════ */
+function openAutoOrders(){navTo('screen-autoorders');renderAutoOrders();}
+window.openAutoOrders=openAutoOrders;
+
+function renderAutoOrders(){
+  var el=document.getElementById('ao-list');if(!el)return;
+  var shs=getShelves(), its=getItems();
+  // default date to today
+  var dateEl=document.getElementById('ao-date');
+  if(dateEl&&!dateEl.value){var nd=new Date();dateEl.value=nd.toISOString().slice(0,10);}
+
+  var items=shs.map(function(s){
+    var r=latestR(s.id);
+    var it=its.find(function(i){return i.id===s.itemId;});
+    if(!it)return null;
+    var qty=r?r.qty:0;
+    var alertVal=parseFloat(s.alertValue)||0;
+    return {s:s,it:it,qty:qty,alertVal:alertVal,reorderQty:parseInt(it.reorderQty)||0};
+  }).filter(Boolean);
+
+  if(!items.length){el.innerHTML='<div class="empty"><div class="ic">📦</div><div>אין פריטים להזמנה</div></div>';return;}
+
+  var orders=LS.get('orders',[]);
+  el.innerHTML=items.map(function(d,idx){
+    var saved=orders.find(function(o){return o.shelfId===d.s.id;});
+    var oqty=saved?saved.orderQty:d.reorderQty||Math.max(1,d.alertVal*2);
+    return '<div class="ao-item">'+
+      '<div class="ao-name">'+d.it.name+'</div>'+
+      '<div class="ao-info">'+d.s.name+' | מלאי נוכחי: <b>'+d.qty+'</b> '+unitL(d.it)+' | סף: '+d.alertVal+'</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<label style="margin:0;font-size:12px;flex:0 0 auto;">כמות להזמנה:</label>'+
+        '<input type="number" min="0" value="'+oqty+'" onchange="saveOrderQty(\''+d.s.id+'\',this.value)" style="width:90px;margin-top:0;padding:6px 10px;font-size:14px;">'+
+        '<span style="font-size:12px;color:var(--muted);">'+unitL(d.it)+'</span>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+window.renderAutoOrders=renderAutoOrders;
+
+function saveOrderQty(shelfId,qty){
+  var orders=LS.get('orders',[]);
+  var ex=orders.find(function(o){return o.shelfId===shelfId;});
+  if(ex){ex.orderQty=parseInt(qty)||0;}
+  else{orders.push({shelfId:shelfId,orderQty:parseInt(qty)||0});}
+  LS.set('orders',orders);
+}
+window.saveOrderQty=saveOrderQty;
+
+function createAutoOrder(){
+  var shs=getShelves(), its=getItems();
+  var orders=LS.get('orders',[]);
+  var dateEl=document.getElementById('ao-date');
+  var orderDate=dateEl?dateEl.value:'';
+  var biz=getSettings().bizName||'WeightStock';
+
+  var lines=[];
+  orders.forEach(function(o){
+    if(!o.orderQty||o.orderQty<=0)return;
+    var sh=shs.find(function(s){return s.id===o.shelfId;});
+    var it=sh?its.find(function(i){return i.id===sh.itemId;}):null;
+    if(!it)return;
+    lines.push({name:it.name,qty:o.orderQty,unit:unitL(it),supplier:it.supplier||'',sku:it.sku||''});
+  });
+
+  if(!lines.length){showToast('אין פריטים להזמנה — הזן כמויות');return;}
+
+  var w=window.open('','_blank','width=500,height:600');
+  if(!w)return;
+  var tableRows=lines.map(function(l,i){
+    return '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 6px;">'+(i+1)+'</td>'+
+      '<td style="padding:8px 6px;font-weight:600;">'+l.name+'</td>'+
+      '<td style="padding:8px 6px;">'+l.sku+'</td>'+
+      '<td style="padding:8px 6px;">'+l.supplier+'</td>'+
+      '<td style="padding:8px 6px;text-align:center;font-weight:700;">'+l.qty+'</td>'+
+      '<td style="padding:8px 6px;text-align:center;">'+l.unit+'</td></tr>';
+  }).join('');
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>טופס הזמנה</title>'+
+    '<style>body{font-family:Arial,sans-serif;direction:rtl;padding:24px;color:#0f172a;}'+
+    'h1{font-size:22px;font-weight:800;margin-bottom:4px;color:#003B8E;}'+
+    'table{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px;}'+
+    'th{background:#003B8E;color:#fff;padding:9px 6px;text-align:right;}'+
+    '.no-print{display:none;}@media print{.no-print{display:none;}}</style></head><body>'+
+    '<h1>⚖️ '+biz+'</h1>'+
+    '<div style="font-size:13px;color:#5A6B8A;margin-bottom:14px;">טופס הזמנה — '+(orderDate||new Date().toLocaleDateString('he-IL'))+'</div>'+
+    '<table><thead><tr><th>#</th><th>פריט</th><th>מק"ט</th><th>ספק</th><th style="text-align:center;">כמות</th><th style="text-align:center;">יחידה</th></tr></thead>'+
+    '<tbody>'+tableRows+'</tbody></table>'+
+    '<div style="margin-top:20px;font-size:12px;color:#94a3b8;">סה"כ '+lines.length+' פריטים</div>'+
+    '<div class="no-print" style="margin-top:16px;">'+
+      '<button onclick="window.print()" style="padding:8px 20px;background:#003B8E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;">🖨️ הדפס</button>'+
+      '<button onclick="window.close()" style="margin-right:8px;padding:8px 20px;background:#64748b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;">סגור</button>'+
+    '</div>'+
+    '<script>setTimeout(function(){window.print();},400);<\/script>'+
+    '</body></html>');
+  w.document.close();
+}
+window.createAutoOrder=createAutoOrder;
+
 (function boot(){
   applyTheme(LS.get('theme','light'));
   checkAutoTheme();
@@ -3991,6 +4626,7 @@ window.printItemLabel=printItemLabel;
   updateDashLogo();
   applyAccent();
   renderDailyTip();
+  updateOnlineStatus();
 })();
 
 setInterval(function(){
