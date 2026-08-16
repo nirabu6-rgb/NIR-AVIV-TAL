@@ -641,6 +641,40 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 .ptable td{padding:6px 4px;border-bottom:1px solid var(--border);text-align:center;}
 .ptable tr:last-child td{border-bottom:none;}
 
+/* ── USER MANAGEMENT ── */
+.um-screen{position:fixed;inset:0;background:var(--bg);z-index:400;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.um-screen.show{display:flex;}
+.um-box{background:var(--card);border-radius:20px;padding:32px 28px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);}
+.um-logo{font-size:52px;text-align:center;margin-bottom:12px;}
+.um-title{font-size:22px;font-weight:800;text-align:center;color:var(--text);margin-bottom:4px;}
+.um-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px;}
+.um-pin-row{display:flex;gap:10px;justify-content:center;margin:20px 0;}
+.um-pin-box{width:52px;height:60px;border:2px solid var(--border);border-radius:12px;font-size:24px;font-weight:800;text-align:center;background:var(--card2);color:var(--text);outline:none;transition:border-color .2s;}
+.um-pin-box:focus{border-color:var(--accent);}
+.um-user-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.um-user-btn{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;color:var(--text);transition:background .15s;}
+.um-user-btn:hover{background:var(--card3);}
+.um-user-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+.um-user-avatar.mgr{background:var(--accent2);}
+.um-user-name{font-weight:700;font-size:14px;}
+.um-user-role{font-size:11px;color:var(--muted);}
+.emp-modal-box{background:var(--card);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.perm-row{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:10px 12px;}
+.perm-label{font-size:13px;flex:1;}
+.perm-toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
+.perm-toggle input{opacity:0;width:0;height:0;}
+.perm-toggle .pt-slider{position:absolute;inset:0;background:var(--card3);border-radius:11px;cursor:pointer;transition:.2s;}
+.perm-toggle input:checked+.pt-slider{background:var(--ok);}
+.perm-toggle .pt-slider:before{content:'';position:absolute;width:16px;height:16px;right:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+.perm-toggle input:checked+.pt-slider:before{right:auto;left:3px;}
+.actlog-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.actlog-icon{width:32px;height:32px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.actlog-body{flex:1;}
+.actlog-who{font-size:13px;font-weight:700;}
+.actlog-what{font-size:12px;color:var(--muted);margin-top:2px;}
+.actlog-when{font-size:11px;color:var(--muted);margin-top:2px;}
+
 /* ── ONBOARDING ── */
 .ob-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;overflow-y:auto;display:none;}
 .ob-overlay.show{display:block;}
@@ -1046,6 +1080,73 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 <div id="main-content">
 
 <!-- ── LOGIN ── -->
+<!-- ══ USER LOGIN SCREEN ══ -->
+<div class="um-screen" id="um-login-screen">
+  <div class="um-box">
+    <div class="um-logo" id="um-biz-icon">⚖️</div>
+    <div class="um-title" id="um-biz-name">WeightStock</div>
+    <div class="um-sub">בחר משתמש להתחברות</div>
+    <div class="um-user-list" id="um-user-list"></div>
+    <div id="um-pin-section" style="display:none;margin-top:20px;">
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:8px;">הכנס קוד כניסה</div>
+      <div class="um-pin-row" id="um-pin-row"></div>
+      <div id="um-pin-err" style="display:none;color:var(--crit);font-size:13px;text-align:center;margin-top:8px;"></div>
+      <button class="btn sec" style="width:100%;margin-top:12px;" onclick="umCancelPin()">← חזור</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EMPLOYEE MANAGEMENT MODAL ══ -->
+<div class="modal" id="modal-employees" style="z-index:450;">
+  <div class="emp-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="margin:0;">👥 ניהול עובדים</h3>
+      <button class="modal-close" onclick="closeModal('modal-employees')">✕</button>
+    </div>
+    <div id="emp-list-wrap"></div>
+    <button class="btn" style="width:100%;margin-top:16px;" onclick="openAddEmp()">+ הוסף עובד</button>
+  </div>
+</div>
+
+<!-- ══ ADD/EDIT EMPLOYEE MODAL ══ -->
+<div class="modal" id="modal-edit-emp" style="z-index:460;">
+  <div class="emp-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="margin:0;" id="emp-modal-title">הוספת עובד</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-emp')">✕</button>
+    </div>
+    <label>שם העובד</label>
+    <input id="emp-name" placeholder="שם מלא">
+    <label style="margin-top:12px;">קוד כניסה (4 ספרות)</label>
+    <input id="emp-code" type="tel" inputmode="numeric" maxlength="4" placeholder="0000">
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">העובד יזין קוד זה בכניסה לאפליקציה</div>
+    <div style="margin-top:20px;font-size:14px;font-weight:700;color:var(--text);">הרשאות גישה</div>
+    <div class="perm-grid" id="perm-grid"></div>
+    <input type="hidden" id="emp-edit-id">
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn sec" style="flex:1;" onclick="closeModal('modal-edit-emp')">ביטול</button>
+      <button class="btn ok" style="flex:1;" onclick="saveEmp()">שמור עובד</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ACTIVITY LOG MODAL ══ -->
+<div class="modal" id="modal-actlog" style="z-index:450;">
+  <div class="emp-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">📋 יומן פעולות</h3>
+      <button class="modal-close" onclick="closeModal('modal-actlog')">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="badge ok" onclick="filterActlog('all')" id="afl-all" style="cursor:pointer;padding:6px 12px;">הכל</button>
+      <button class="badge" onclick="filterActlog('login')" id="afl-login" style="cursor:pointer;padding:6px 12px;background:var(--card2);">כניסות</button>
+      <button class="badge" onclick="filterActlog('item')" id="afl-item" style="cursor:pointer;padding:6px 12px;background:var(--card2);">פריטים</button>
+      <button class="badge" onclick="filterActlog('qty')" id="afl-qty" style="cursor:pointer;padding:6px 12px;background:var(--card2);">כמויות</button>
+    </div>
+    <div id="actlog-list"></div>
+  </div>
+</div>
+
 <div class="ob-overlay" id="login-overlay">
   <div class="ob-wrap" style="max-width:400px;">
     <div style="text-align:center;margin-bottom:28px;">
@@ -1094,21 +1195,20 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
       </div>
     </div>
     <div class="ob-step" id="ob-s3">
-      <div class="ob-logo">🔐</div>
-      <div class="ob-title">הרשמה</div>
-      <div class="ob-sub">שלב 3 מתוך 3 — פרטים אישיים לכניסה</div>
+      <div class="ob-logo">👑</div>
+      <div class="ob-title">הגדרת מנהל ראשי</div>
+      <div class="ob-sub">שלב 3 מתוך 3 — פרטי המנהל וקוד כניסה</div>
       <div class="ob-biz">
         <div id="reg-err" style="display:none;background:rgba(185,28,28,.1);color:var(--crit);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:14px;text-align:center;"></div>
         <label>שם מלא</label>
         <input id="ob-fullname" placeholder="ישראל ישראלי">
-        <label style="margin-top:14px;">מספר תעודת זהות</label>
-        <input id="ob-idnum" type="tel" placeholder="000000000" inputmode="numeric" maxlength="9">
         <label style="margin-top:14px;">מספר טלפון</label>
         <input id="ob-phone" type="tel" placeholder="050-0000000">
-        <label style="margin-top:14px;">סיסמה</label>
-        <input id="ob-pw" type="password" placeholder="לפחות 4 תווים">
-        <label style="margin-top:14px;">אימות סיסמה</label>
-        <input id="ob-pw2" type="password" placeholder="הכנס שוב את הסיסמה">
+        <label style="margin-top:14px;">קוד כניסה למנהל (4 ספרות)</label>
+        <input id="ob-pin" type="tel" inputmode="numeric" maxlength="4" placeholder="1234" style="letter-spacing:6px;font-size:22px;font-weight:800;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">שמור את הקוד הזה — בו תתחבר כמנהל</div>
+        <label style="margin-top:14px;">אימות קוד</label>
+        <input id="ob-pin2" type="tel" inputmode="numeric" maxlength="4" placeholder="1234" style="letter-spacing:6px;font-size:22px;font-weight:800;text-align:center;">
         <div class="row" style="margin-top:18px;">
           <button class="btn sec" onclick="obBack2()">חזור</button>
           <button class="btn ok" onclick="obToPlans()">הבא ›</button>
@@ -1242,7 +1342,7 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 
 <div class="screen active" id="screen-dashboard">
   <div class="topbar">
-    <div><h2><span id="dash-logo">&#x2696;&#xFE0F;</span> WeightStock</h2><div class="muted" id="db-sub" style="font-size:12px;">מערכת מלאי חכם לפי משקל</div></div>
+    <div><h2><span id="dash-logo">&#x2696;&#xFE0F;</span> WeightStock</h2><div class="muted" id="db-sub" style="font-size:12px;">מערכת מלאי חכם לפי משקל</div><div id="db-user-chip" style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;"></div></div>
     <div style="display:flex;gap:4px;align-items:center;">
       <button class="icon-btn" id="view-toggle-btn" onclick="toggleDashView()" title="החלף תצוגה" style="font-size:16px;">☰</button>
       <button class="icon-btn" onclick="toggleSearch()" id="search-btn" title="חיפוש" style="font-size:16px;">🔍</button>
@@ -1629,6 +1729,24 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
         </div>
       </div>
 
+      <!-- ניהול עובדים — מנהל בלבד -->
+      <div class="card" id="st-emp-btn" style="margin:0;padding:0;overflow:hidden;display:none;">
+        <button onclick="closeModal('modal-settings');openEmployees();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">👥 ניהול עובדים</div>
+          <span style="color:var(--muted);">›</span>
+        </button>
+        <button onclick="openChangeMgrPin();" style="width:100%;background:none;border:none;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">🔑 שינוי קוד מנהל</div>
+          <span style="color:var(--muted);">›</span>
+        </button>
+      </div>
+      <!-- יומן פעולות — מנהל בלבד -->
+      <div class="card" id="st-actlog-btn" style="margin:0;padding:0;overflow:hidden;display:none;">
+        <button onclick="closeModal('modal-settings');openActLog();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">📋 יומן פעולות ועובדים</div>
+          <span style="color:var(--muted);">›</span>
+        </button>
+      </div>
       <!-- דוחות -->
       <div class="card" style="margin:0;padding:0;overflow:hidden;">
         <button onclick="closeModal('modal-settings');openReports();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
@@ -2056,6 +2174,7 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <div style="flex:1;"></div>
   <button class="sidebtn" onclick="openTVMode()"><span class="ic">📺</span>מצב תצוגה</button>
   <button class="sidebtn" onclick="openSettings()"><span class="ic">⚙️</span>הגדרות</button>
+  <button class="sidebtn" id="side-switch-user" onclick="umLogout()" style="display:none;border-top:1px solid rgba(255,255,255,.1);margin-top:4px;"><span class="ic">🔄</span>החלף משתמש</button>
 </nav>
 
 <!-- SPLASH -->
@@ -2424,6 +2543,7 @@ function addReading(shelfId,rawW){
   var all=LS.get('readings',{}); if(!all[shelfId])all[shelfId]=[];
   all[shelfId].push(r); if(all[shelfId].length>500)all[shelfId]=all[shelfId].slice(-500);
   LS.set('readings',all);
+  if(r.src!=='auto')logAct('qty_update','עדכון כמות: '+(it?it.name:sh.name)+' → '+qty+' יח\'');
   chkAlert(sh,r,it); return r;
 }
 function latestR(id){var r=getReadings(id);return r.length?r[r.length-1]:null;}
@@ -2486,6 +2606,344 @@ function showLogin(){
   lo.classList.add('show');
 }
 window.showLogin=showLogin;
+
+/* ════════════════════════════════════════════════════
+   USER MANAGEMENT — מנהלים ועובדים
+════════════════════════════════════════════════════ */
+
+var PERMISSIONS=[
+  {key:'seePrices',   label:'מחירי קנייה ומכירה', icon:'💸'},
+  {key:'seeProfit',   label:'רווח גולמי',          icon:'📈'},
+  {key:'editItems',   label:'עריכת פריטים',         icon:'✏️'},
+  {key:'addItems',    label:'הוספת פריטים',          icon:'➕'},
+  {key:'deleteItems', label:'מחיקת פריטים',         icon:'🗑️'},
+  {key:'editQty',     label:'עדכון כמויות',         icon:'⚖️'},
+  {key:'seeReports',  label:'דוחות וגרפים',         icon:'📊'},
+  {key:'seeCategories',label:'ניהול קטגוריות',      icon:'📁'},
+  {key:'tvMode',      label:'מצב תצוגה (TV)',       icon:'📺'},
+];
+
+var DEFAULT_EMP_PERMS={seePrices:false,seeProfit:false,editItems:false,addItems:false,deleteItems:false,editQty:true,seeReports:false,seeCategories:false,tvMode:false};
+
+/* current user session — {isManager, empId, name, perms, loginTime} */
+var _umUser=null;
+
+function getEmployees(){return LS.get('um_employees',[]);}
+function setEmployees(a){LS.set('um_employees',a);}
+function getActLog(){return LS.get('um_actlog',[]);}
+
+function logAct(action,details){
+  if(!_umUser)return;
+  var log=getActLog();
+  log.unshift({userId:_umUser.empId||'manager',userName:_umUser.name,isManager:_umUser.isManager,action:action,details:details||'',ts:Date.now()});
+  if(log.length>500)log=log.slice(0,500);
+  LS.set('um_actlog',log);
+}
+
+function canDo(perm){
+  if(!_umUser)return true; /* fallback */
+  if(_umUser.isManager)return true;
+  return !!(_umUser.perms&&_umUser.perms[perm]);
+}
+window.canDo=canDo;
+
+/* ── Show user login screen ── */
+function showUMLogin(){
+  var mgr=LS.get('um_manager',null);
+  var emps=getEmployees();
+  var bizName=LS.get('settings',{}).bizName||'WeightStock';
+  document.getElementById('um-biz-name').textContent=bizName;
+  document.getElementById('um-pin-section').style.display='none';
+  var list=document.getElementById('um-user-list');
+  var html='<div class="um-user-btn" onclick="umSelectUser(\'manager\')">'+'<div class="um-user-avatar mgr">'+((mgr&&mgr.name)?mgr.name[0]:'מ')+'</div>'+'<div><div class="um-user-name">'+(mgr?mgr.name:'מנהל')+'</div><div class="um-user-role">מנהל ראשי • גישה מלאה</div></div></div>';
+  emps.forEach(function(e){
+    html+='<div class="um-user-btn" onclick="umSelectUser(\''+e.id+'\')">'+'<div class="um-user-avatar">'+e.name[0]+'</div>'+'<div><div class="um-user-name">'+e.name+'</div><div class="um-user-role">עובד</div></div></div>';
+  });
+  list.innerHTML=html;
+  document.getElementById('um-login-screen').classList.add('show');
+}
+window.showUMLogin=showUMLogin;
+
+var _umSelectingId=null;
+function umSelectUser(id){
+  _umSelectingId=id;
+  /* build 4-box PIN */
+  var row=document.getElementById('um-pin-row');
+  row.innerHTML='<input class="um-pin-box" maxlength="1" type="tel" inputmode="numeric" id="up0"><input class="um-pin-box" maxlength="1" type="tel" inputmode="numeric" id="up1"><input class="um-pin-box" maxlength="1" type="tel" inputmode="numeric" id="up2"><input class="um-pin-box" maxlength="1" type="tel" inputmode="numeric" id="up3">';
+  document.getElementById('um-user-list').style.display='none';
+  document.getElementById('um-pin-section').style.display='block';
+  document.getElementById('um-pin-err').style.display='none';
+  document.getElementById('up0').focus();
+  /* auto-advance */
+  [0,1,2,3].forEach(function(i){
+    var el=document.getElementById('up'+i);
+    el.addEventListener('input',function(){
+      el.value=el.value.replace(/\D/g,'').slice(-1);
+      if(el.value&&i<3)document.getElementById('up'+(i+1)).focus();
+      if(i===3&&el.value)umSubmitPin();
+    });
+  });
+}
+window.umSelectUser=umSelectUser;
+
+function umCancelPin(){
+  document.getElementById('um-user-list').style.display='flex';
+  document.getElementById('um-user-list').style.flexDirection='column';
+  document.getElementById('um-pin-section').style.display='none';
+  _umSelectingId=null;
+}
+window.umCancelPin=umCancelPin;
+
+function umSubmitPin(){
+  var pin=[0,1,2,3].map(function(i){return (document.getElementById('up'+i)||{}).value||'';}).join('');
+  var errEl=document.getElementById('um-pin-err');
+  if(pin.length<4){errEl.textContent='הכנס 4 ספרות';errEl.style.display='block';return;}
+  if(_umSelectingId==='manager'){
+    var mgr=LS.get('um_manager',null);
+    if(!mgr){errEl.textContent='מנהל לא מוגדר';errEl.style.display='block';return;}
+    if(mgr.pin!==pin){errEl.textContent='קוד שגוי';errEl.style.display='block';[0,1,2,3].forEach(function(i){document.getElementById('up'+i).value='';});document.getElementById('up0').focus();return;}
+    _umUser={isManager:true,empId:'manager',name:mgr.name,perms:null,loginTime:Date.now()};
+    LS.set('um_session',_umUser);
+    logAct('login','כניסת מנהל');
+    umEnterApp();
+  } else {
+    var emps=getEmployees();
+    var emp=emps.find(function(e){return e.id===_umSelectingId;});
+    if(!emp||emp.code!==pin){errEl.textContent='קוד שגוי';errEl.style.display='block';[0,1,2,3].forEach(function(i){document.getElementById('up'+i).value='';});document.getElementById('up0').focus();return;}
+    _umUser={isManager:false,empId:emp.id,name:emp.name,perms:emp.permissions,loginTime:Date.now()};
+    LS.set('um_session',_umUser);
+    logAct('login','כניסת עובד');
+    umEnterApp();
+  }
+}
+window.umSubmitPin=umSubmitPin;
+
+function umEnterApp(){
+  document.getElementById('um-login-screen').classList.remove('show');
+  applyUserPerms();
+  renderDash(); updBell(); updateDashLogo(); renderDailyTip();
+  updateOnlineStatus&&updateOnlineStatus();
+  showToast('ברוך הבא, '+_umUser.name+' 👋');
+}
+
+function applyUserPerms(){
+  if(!_umUser)return;
+  var mgr=_umUser.isManager;
+  /* Financial cards in dashboard */
+  var vb=document.getElementById('db-value-bar');
+  if(vb)vb.style.display=(mgr||canDo('seePrices')||canDo('seeProfit'))?'':'none';
+  /* Bottom nav tabs */
+  var repNav=document.getElementById('nav-screen-reports');
+  if(repNav)repNav.style.display=(mgr||canDo('seeReports'))?'':'none';
+  var catNav=document.getElementById('nav-screen-categories');
+  if(catNav)catNav.style.display=(mgr||canDo('seeCategories'))?'':'none';
+  /* Sidebar items */
+  var sideRep=document.getElementById('side-screen-reports');
+  if(sideRep)sideRep.style.display=(mgr||canDo('seeReports'))?'':'none';
+  var sideCat=document.getElementById('side-screen-categories');
+  if(sideCat)sideCat.style.display=(mgr||canDo('seeCategories'))?'':'none';
+  /* FAB add button */
+  var fabAdd=document.getElementById('fab-btn');
+  if(fabAdd)fabAdd.style.display=(mgr||canDo('addItems'))?'':'none';
+  /* Manager-only settings items */
+  var empBtn=document.getElementById('st-emp-btn');
+  if(empBtn)empBtn.style.display=mgr?'':'none';
+  var logBtn=document.getElementById('st-actlog-btn');
+  if(logBtn)logBtn.style.display=mgr?'':'none';
+  /* Sidebar switch user */
+  var swBtn=document.getElementById('side-switch-user');
+  if(swBtn)swBtn.style.display='flex';
+  /* Current user chip in dashboard header */
+  var uchip=document.getElementById('db-user-chip');
+  if(uchip&&_umUser)uchip.textContent=(_umUser.isManager?'👑 ':'👤 ')+_umUser.name;
+}
+window.applyUserPerms=applyUserPerms;
+
+function umLogout(){
+  LS.del('um_session');
+  _umUser=null;
+  showUMLogin();
+}
+window.umLogout=umLogout;
+
+/* ── Employee CRUD ── */
+function openEmployees(){
+  renderEmpList();
+  openModal('modal-employees');
+}
+window.openEmployees=openEmployees;
+
+function renderEmpList(){
+  var emps=getEmployees();
+  var wrap=document.getElementById('emp-list-wrap');
+  if(!emps.length){wrap.innerHTML='<div class="muted" style="text-align:center;padding:20px 0;">אין עובדים עדיין</div>';return;}
+  wrap.innerHTML=emps.map(function(e){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card2);border-radius:12px;margin-bottom:8px;">'+
+      '<div class="um-user-avatar">'+e.name[0]+'</div>'+
+      '<div style="flex:1;"><div style="font-weight:700;font-size:14px;">'+e.name+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);">קוד: '+e.code+' | '+Object.values(e.permissions).filter(Boolean).length+'/'+PERMISSIONS.length+' הרשאות</div></div>'+
+      '<button onclick="openEditEmp(\''+e.id+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;">✏️</button>'+
+      '<button onclick="deleteEmp(\''+e.id+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;">🗑️</button>'+
+    '</div>';
+  }).join('');
+}
+
+function buildPermGrid(perms){
+  var grid=document.getElementById('perm-grid');
+  grid.innerHTML=PERMISSIONS.map(function(p){
+    var checked=perms&&perms[p.key]?'checked':'';
+    return '<label class="perm-row">'+
+      '<span class="perm-label">'+p.icon+' '+p.label+'</span>'+
+      '<span class="perm-toggle"><input type="checkbox" id="perm-'+p.key+'" '+checked+'><span class="pt-slider"></span></span>'+
+    '</label>';
+  }).join('');
+}
+
+function openAddEmp(){
+  document.getElementById('emp-modal-title').textContent='הוספת עובד';
+  document.getElementById('emp-name').value='';
+  document.getElementById('emp-code').value='';
+  document.getElementById('emp-edit-id').value='';
+  buildPermGrid(DEFAULT_EMP_PERMS);
+  openModal('modal-edit-emp');
+}
+window.openAddEmp=openAddEmp;
+
+function openEditEmp(id){
+  var emps=getEmployees();
+  var emp=emps.find(function(e){return e.id===id;});
+  if(!emp)return;
+  document.getElementById('emp-modal-title').textContent='עריכת עובד';
+  document.getElementById('emp-name').value=emp.name;
+  document.getElementById('emp-code').value=emp.code;
+  document.getElementById('emp-edit-id').value=emp.id;
+  buildPermGrid(emp.permissions);
+  openModal('modal-edit-emp');
+}
+window.openEditEmp=openEditEmp;
+
+function saveEmp(){
+  var name=document.getElementById('emp-name').value.trim();
+  var code=document.getElementById('emp-code').value.trim();
+  var editId=document.getElementById('emp-edit-id').value;
+  if(!name){showToast('חסר שם עובד');return;}
+  if(!code||code.length<4){showToast('הקוד חייב להיות 4 ספרות');return;}
+  var perms={};
+  PERMISSIONS.forEach(function(p){
+    perms[p.key]=document.getElementById('perm-'+p.key).checked;
+  });
+  var emps=getEmployees();
+  if(editId){
+    var idx=emps.findIndex(function(e){return e.id===editId;});
+    if(idx>=0){emps[idx].name=name;emps[idx].code=code;emps[idx].permissions=perms;}
+  } else {
+    emps.push({id:'emp_'+Date.now(),name:name,code:code,permissions:perms});
+  }
+  setEmployees(emps);
+  logAct('emp_save','שמירת עובד: '+name);
+  closeModal('modal-edit-emp');
+  renderEmpList();
+  showToast('עובד נשמר בהצלחה ✓');
+}
+window.saveEmp=saveEmp;
+
+function deleteEmp(id){
+  if(!confirm('למחוק עובד זה?'))return;
+  var emps=getEmployees().filter(function(e){return e.id!==id;});
+  setEmployees(emps);
+  logAct('emp_delete','מחיקת עובד '+id);
+  renderEmpList();
+  showToast('עובד נמחק');
+}
+window.deleteEmp=deleteEmp;
+
+/* ── Activity Log ── */
+var _actFilter='all';
+function openActLog(){
+  _actFilter='all';
+  renderActLog();
+  openModal('modal-actlog');
+}
+window.openActLog=openActLog;
+
+function filterActlog(f){
+  _actFilter=f;
+  ['all','login','item','qty'].forEach(function(k){
+    var btn=document.getElementById('afl-'+k);
+    if(btn){btn.style.background=k===f?'var(--accent)':'var(--card2)';btn.style.color=k===f?'#fff':'';}
+  });
+  renderActLog();
+}
+window.filterActlog=filterActlog;
+
+function renderActLog(){
+  var log=getActLog();
+  var icons={login:'🔑',item_add:'➕',item_edit:'✏️',item_delete:'🗑️',qty_update:'⚖️',emp_save:'👤',emp_delete:'🗑️',report:'📊'};
+  var filtered=log.filter(function(r){
+    if(_actFilter==='all')return true;
+    if(_actFilter==='login')return r.action==='login';
+    if(_actFilter==='item')return r.action.indexOf('item')===0;
+    if(_actFilter==='qty')return r.action.indexOf('qty')===0;
+    return true;
+  });
+  if(!filtered.length){document.getElementById('actlog-list').innerHTML='<div class="muted" style="text-align:center;padding:24px;">אין פעולות</div>';return;}
+  document.getElementById('actlog-list').innerHTML=filtered.slice(0,100).map(function(r){
+    var d=new Date(r.ts);
+    var dateStr=d.toLocaleDateString('he-IL')+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="actlog-row">'+
+      '<div class="actlog-icon">'+(icons[r.action]||'📌')+'</div>'+
+      '<div class="actlog-body">'+
+        '<div class="actlog-who">'+r.userName+(r.isManager?' 👑':'')+'</div>'+
+        '<div class="actlog-what">'+r.details+'</div>'+
+        '<div class="actlog-when">'+dateStr+'</div>'+
+      '</div></div>';
+  }).join('');
+}
+window.renderActLog=renderActLog;
+
+/* ── Init auth on boot ── */
+function initAuth(){
+  var mgr=LS.get('um_manager',null);
+  if(!mgr){
+    /* Existing user — auto-migrate: create manager from account data */
+    var acc=LS.get('account',null);
+    var name=acc?acc.fullname||'מנהל':'מנהל';
+    LS.set('um_manager',{name:name,pin:'1234'});
+    /* Auto-login as manager with migration note */
+    _umUser={isManager:true,empId:'manager',name:name,perms:null,loginTime:Date.now()};
+    LS.set('um_session',_umUser);
+    logAct('login','כניסה אוטומטית — נדרש לעדכן קוד מנהל בהגדרות');
+    showToast('קוד מנהל ברירת מחדל: 1234 — שנה בהגדרות ← ניהול עובדים');
+    return true;
+  }
+  var sess=LS.get('um_session',null);
+  if(sess&&sess.loginTime&&(Date.now()-sess.loginTime<8*3600*1000)){
+    /* Valid session (8hr window) */
+    _umUser=sess;
+    return true;
+  }
+  showUMLogin();
+  return null; /* waiting for login */
+}
+window.initAuth=initAuth;
+
+/* ── Change manager PIN from settings ── */
+function openChangeMgrPin(){
+  var cur=prompt('קוד נוכחי:');
+  var mgr=LS.get('um_manager',null);
+  if(!mgr||mgr.pin!==cur){showToast('קוד שגוי');return;}
+  var np=prompt('קוד חדש (4 ספרות):');
+  if(!np||!/^\d{4}$/.test(np)){showToast('קוד חייב להיות 4 ספרות');return;}
+  mgr.pin=np; LS.set('um_manager',mgr);
+  showToast('קוד מנהל עודכן ✓');
+}
+window.openChangeMgrPin=openChangeMgrPin;
+
+/* ── Manager first-time setup (called after onboarding finishes) ── */
+function setupManagerUser(name,pin){
+  LS.set('um_manager',{name:name||'מנהל',pin:pin||'1234'});
+}
+window.setupManagerUser=setupManagerUser;
 
 /* ── PLANS ── */
 var PLANS={
@@ -2576,18 +3034,14 @@ function upgradeTo(key){
 window.upgradeTo=upgradeTo;
 
 function obToPlans(){
-  // ולידציה של שלב ההרשמה
-  var idnum=document.getElementById('ob-idnum').value.trim();
-  var pw=document.getElementById('ob-pw').value;
-  var pw2=document.getElementById('ob-pw2').value;
   var fullname=document.getElementById('ob-fullname').value.trim();
-  var phone=document.getElementById('ob-phone').value.trim();
+  var pin=document.getElementById('ob-pin').value.trim();
+  var pin2=document.getElementById('ob-pin2').value.trim();
   var errEl=document.getElementById('reg-err');
   errEl.style.display='none';
   if(!fullname){errEl.textContent='הכנס שם מלא';errEl.style.display='block';return;}
-  if(!idnum||idnum.length<7){errEl.textContent='הכנס מספר תעודת זהות תקין';errEl.style.display='block';return;}
-  if(pw.length<4){errEl.textContent='הסיסמה חייבת לפחות 4 תווים';errEl.style.display='block';return;}
-  if(pw!==pw2){errEl.textContent='הסיסמאות לא תואמות';errEl.style.display='block';return;}
+  if(!pin||pin.length!==4||!/^\d{4}$/.test(pin)){errEl.textContent='הקוד חייב להיות 4 ספרות';errEl.style.display='block';return;}
+  if(pin!==pin2){errEl.textContent='הקודים לא תואמים';errEl.style.display='block';return;}
   document.getElementById('ob-s3').classList.remove('active');
   document.getElementById('ob-s4').classList.add('active');
 }
@@ -2628,20 +3082,25 @@ window.obBack2=obBack2;
 
 function obFinish(){
   if(!_obTmpl)return;
-  var idnum=document.getElementById('ob-idnum').value.trim();
-  var pw=document.getElementById('ob-pw').value;
   var fullname=document.getElementById('ob-fullname').value.trim();
   var phone=document.getElementById('ob-phone').value.trim();
+  var pin=document.getElementById('ob-pin').value.trim();
   LS.set('tmpl',_obTmpl);
   _DR=null;
   var biz=document.getElementById('ob-bizname').value.trim();
   var cur=document.getElementById('ob-cur').value;
   var td=TEMPLATES[_obTmpl];
   LS.set('settings',{bizName:biz,bizType:td.bizType||'',currency:cur,defaultAlert:20,demo:true,bizNotes:''});
-  LS.set('account',{fullname:fullname,idnum:idnum,phone:phone,pwHash:pwHash(pw)});
+  LS.set('account',{fullname:fullname,phone:phone});
   LS.set('plan',{key:_selectedPlan,name:PLANS[_selectedPlan].name,since:Date.now(),trialEnd:Date.now()+14*86400000});
-  LS.set('session',true);
+  /* save manager credentials */
+  setupManagerUser(fullname||'מנהל', pin||'1234');
+  /* auto-login as manager */
+  _umUser={isManager:true,empId:'manager',name:fullname||'מנהל',perms:null,loginTime:Date.now()};
+  LS.set('um_session',_umUser);
+  logAct('login','כניסה ראשונה — הגדרת מנהל');
   document.getElementById('ob-overlay').classList.remove('show');
+  applyUserPerms();
   renderDash(); updBell(); updateDashLogo(); renderDailyTip();
 }
 window.obFinish=obFinish;
@@ -3388,7 +3847,7 @@ function saveItem(){
   var expiryEl=document.getElementById('im-expiry'), rqEl2=document.getElementById('im-reorderqty');
   var spEl2=document.getElementById('im-sell-price');
   var d={name:name,unitType:document.getElementById('im-utype').value||'unit',unitWeight:uw,categoryId:document.getElementById('im-cat').value||'',sku:document.getElementById('im-sku').value.trim(),barcode:document.getElementById('im-bar').value.trim(),price:parseFloat(document.getElementById('im-price').value)||0,sellPrice:parseFloat(spEl2?spEl2.value:0)||0,minOrder:parseInt(document.getElementById('im-minord').value)||0,reorderQty:parseInt(rqEl2?rqEl2.value:0)||0,expiry:expiryEl?expiryEl.value.trim():'',supplier:document.getElementById('im-sup').value.trim(),supplierPhone:document.getElementById('im-suptel').value.trim(),supplierWhatsApp:document.getElementById('im-supwa').value.trim(),supplierEmail:document.getElementById('im-supemail').value.trim(),orderEmail:document.getElementById('im-ordermail').value.trim(),notes:document.getElementById('im-notes').value.trim(),location:{row:document.getElementById('im-loc-row').value.trim(),shelf:document.getElementById('im-loc-shelf').value.trim(),cell:document.getElementById('im-loc-cell').value.trim()}};
-  if(eid){var idx=its.findIndex(function(i){return i.id===eid;});if(idx>=0)Object.assign(its[idx],d);}else{d.id='i'+Date.now();its.push(d);}
+  if(eid){var idx=its.findIndex(function(i){return i.id===eid;});if(idx>=0){Object.assign(its[idx],d);logAct('item_edit','עריכת פריט: '+name);}  }else{d.id='i'+Date.now();its.push(d);logAct('item_add','הוספת פריט: '+name);}
   LS.set('items',its); closeModal('modal-item'); if(activeSc==='screen-items')renderItemsSc();
 }
 window.saveItem=saveItem;
@@ -3396,7 +3855,9 @@ function deleteItem(){
   var id=document.getElementById('im-id').value; if(!id)return;
   if(getShelves().some(function(s){return s.itemId===id;})){alert('הפריט משויך למשטח — לא ניתן למחוק');return;}
   if(!confirm('למחוק פריט?'))return;
+  var name=(getItems().find(function(i){return i.id===id;})||{}).name||id;
   switchToUser(); LS.set('items',getItems().filter(function(i){return i.id!==id;}));
+  logAct('item_delete','מחיקת פריט: '+name);
   closeModal('modal-item'); if(activeSc==='screen-items')renderItemsSc();
 }
 window.deleteItem=deleteItem;
@@ -5030,17 +5491,18 @@ window.createAutoOrder=createAutoOrder;
     var sp=document.getElementById('splash');
     if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
   },1800);
-  var acc=LS.get('account',null);
-  var vm=LS.get('tmpl',null);
-  var sess=LS.get('session',false);
-  if(!acc||!vm){showOnboarding();return;}  // הרשמה ראשונה
-  if(!sess){showLogin();return;}           // יש חשבון, צריך להתחבר
-  renderDash();
-  updBell();
-  updateDashLogo();
   applyAccent();
-  renderDailyTip();
-  updateOnlineStatus();
+  var vm=LS.get('tmpl',null);
+  var mgr=LS.get('um_manager',null);
+  if(!vm||!mgr){showOnboarding();return;}  // הגדרה ראשונה
+  /* try restore session */
+  var authResult=initAuth();
+  if(authResult===true){
+    /* valid session restored */
+    applyUserPerms();
+    renderDash(); updBell(); updateDashLogo(); renderDailyTip(); updateOnlineStatus();
+  }
+  /* authResult===null means login screen is shown — wait for user */
 })();
 
 setInterval(function(){
