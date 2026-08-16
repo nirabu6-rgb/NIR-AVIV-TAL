@@ -2204,7 +2204,7 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
       <div class="sidebar-logo-sub">ניהול מלאי חכם</div>
     </div>
   </div>
-  <button class="sidebar-fab-btn" onclick="toggleFabMenu()">
+  <button class="sidebar-fab-btn" onclick="toggleSidebarFab(this)">
     <span style="font-size:18px;line-height:1;">＋</span> פעולה חדשה
   </button>
   <button class="sidebtn active" id="side-screen-dashboard" onclick="navTo('screen-dashboard')"><span class="ic">📊</span>דשבורד</button>
@@ -3730,8 +3730,24 @@ function toggleFabMenu(){
   var m=document.getElementById('fab-menu');
   var open=m.style.display!=='none';
   m.style.display=open?'none':'block';
-  document.getElementById('main-fab').textContent=open?'+':'✕';
+  var fab=document.getElementById('main-fab');
+  if(fab)fab.textContent=open?'+':'✕';
 }
+
+function toggleSidebarFab(btn){
+  var m=document.getElementById('fab-menu');
+  var open=m.style.display!=='none';
+  if(open){m.style.display='none';return;}
+  /* position menu above the button, aligned to sidebar */
+  var r=btn.getBoundingClientRect();
+  m.style.position='fixed';
+  m.style.bottom=(window.innerHeight-r.top+8)+'px';
+  m.style.right='8px';
+  m.style.left='auto';
+  m.style.transform='none';
+  m.style.display='block';
+}
+window.toggleSidebarFab=toggleSidebarFab;
 function closeFabMenu(){
   document.getElementById('fab-menu').style.display='none';
   document.getElementById('main-fab').textContent='+';
