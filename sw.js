@@ -1,4 +1,4 @@
-const CACHE = 'ws3-v2';
+const CACHE = 'ws3-v9';
 const FILES = ['./index.html'];
 
 self.addEventListener('install', function(e) {
@@ -24,14 +24,14 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   e.respondWith(
-    caches.match(e.request).then(function(r) {
-      return r || fetch(e.request).then(function(resp) {
-        if (resp && resp.status === 200 && resp.type === 'basic') {
-          var clone = resp.clone();
-          caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
-        }
-        return resp;
-      }).catch(function() { return r; });
+    fetch(e.request).then(function(resp) {
+      if (resp && resp.status === 200 && resp.type === 'basic') {
+        var clone = resp.clone();
+        caches.open(CACHE).then(function(c) { c.put(e.request, clone); });
+      }
+      return resp;
+    }).catch(function() {
+      return caches.match(e.request);
     })
   );
 });
