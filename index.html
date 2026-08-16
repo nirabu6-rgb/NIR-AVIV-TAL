@@ -1307,7 +1307,9 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <button onclick="closeFabMenu();openAlerts();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">🔔 התראות מלאי נמוך</button>
   <button onclick="closeFabMenu();openExport();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📤 יצוא נתונים</button>
   <button onclick="closeFabMenu();navTo('screen-history');" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⏱️ היסטוריית שקילות</button>
-  <button onclick="closeFabMenu();openAutoOrders();" style="width:100%;background:none;border:none;padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📦 הזמנות אוטומטיות</button>
+  <button onclick="closeFabMenu();openAutoOrders();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📦 הזמנות אוטומטיות</button>
+  <button onclick="closeFabMenu();openWhatsAppOrder();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📲 הזמן ב-WhatsApp</button>
+  <button onclick="closeFabMenu();openTVMode();" style="width:100%;background:none;border:none;padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📺 מצב תצוגה</button>
 </div>
 <button class="fab" id="main-fab" onclick="toggleFabMenu()">+</button>
 
@@ -1572,8 +1574,15 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 
       <!-- דוחות -->
       <div class="card" style="margin:0;padding:0;overflow:hidden;">
-        <button onclick="closeModal('modal-settings');openReport()" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
-          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">📊 דוח מלאי</div>
+        <button onclick="closeModal('modal-settings');openReports();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">📊 דוחות וגרפים</div>
+          <span style="color:var(--muted);">›</span>
+        </button>
+      </div>
+      <!-- יצוא -->
+      <div class="card" style="margin:0;padding:0;overflow:hidden;">
+        <button onclick="closeModal('modal-settings');openExport();" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;">📤 יצוא נתונים</div>
           <span style="color:var(--muted);">›</span>
         </button>
       </div>
@@ -1840,6 +1849,17 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
       <button class="modal-close" onclick="closeModal('modal-order-today')">&#x2715;</button>
     </div>
     <div id="order-today-list"></div>
+  </div>
+</div>
+
+<!-- MODAL: WHATSAPP ORDER -->
+<div class="modal-overlay" id="modal-whatsapp-order">
+  <div class="modal-box mid" style="width:calc(100% - 28px);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">📲 הזמן ב-WhatsApp</h3>
+      <button class="modal-close" onclick="closeModal('modal-whatsapp-order')">&#x2715;</button>
+    </div>
+    <div id="whatsapp-order-list"></div>
   </div>
 </div>
 
@@ -2655,8 +2675,45 @@ function renderDash(){
   document.getElementById('db-shelves').innerHTML=html;
   updBell();
   renderDailyTip();
+  /* Feature 4 — swipe gesture on shelf cards */
+  attachSwipe();
 }
 window.renderDash=renderDash;
+
+/* Feature 4 — swipe actions */
+function attachSwipe(){
+  var cards=document.querySelectorAll('.shelf-card');
+  cards.forEach(function(card){
+    var startX=0,startY=0,dx=0,moved=false;
+    card.addEventListener('touchstart',function(e){
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;dx=0;moved=false;
+      card.style.transition='';
+    },{passive:true});
+    card.addEventListener('touchmove',function(e){
+      dx=e.touches[0].clientX-startX;
+      var dy=e.touches[0].clientY-startY;
+      if(Math.abs(dx)<Math.abs(dy)||Math.abs(dx)<8)return;
+      moved=true;
+      card.style.transform='translateX('+dx+'px)';
+      card.style.transition='';
+      /* hint strip */
+      var hint=card.querySelector('.swipe-hint');
+      if(!hint){hint=document.createElement('div');hint.className='swipe-hint';hint.style.cssText='position:absolute;top:0;bottom:0;width:8px;border-radius:4px;transition:opacity .1s;';card.style.position='relative';card.style.overflow='visible';card.appendChild(hint);}
+      if(dx>0){hint.style.right='auto';hint.style.left='0';hint.style.background='rgba(0,122,77,0.6)';}
+      else{hint.style.left='auto';hint.style.right='0';hint.style.background='rgba(0,59,142,0.6)';}
+      hint.style.opacity=Math.min(1,Math.abs(dx)/60)+'';
+    },{passive:true});
+    card.addEventListener('touchend',function(){
+      card.style.transition='transform 0.25s ease';
+      card.style.transform='';
+      var h=card.querySelector('.swipe-hint');if(h)h.style.opacity='0';
+      if(!moved)return;
+      var id=card.getAttribute('data-shid');if(!id)return;
+      if(dx>= 60){openSh(id);}
+      else if(dx<=-60){openSh(id);}
+    });
+  });
+}
 
 function shCard(sh,its){
   var r=latestR(sh.id), st=calcSt(sh,r), it=its.find(function(i){return i.id===sh.itemId;});
@@ -3983,6 +4040,50 @@ function exitTVMode(){
   }
 }
 window.exitTVMode=exitTVMode;
+
+/* Feature 5 — WhatsApp smart order */
+function openWhatsAppOrder(){
+  var shs=getShelves(), its=getItems();
+  var s=getSettings(), bizName=s.bizName||'WeightStock';
+  var today=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric'});
+  var groups={};
+  shs.forEach(function(sh){
+    var r=latestR(sh.id), st=calcSt(sh,r);
+    if(st!=='warn'&&st!=='crit')return;
+    if(!r)return;
+    var it=its.find(function(i){return i.id===sh.itemId;}); if(!it)return;
+    var sup=it.supplier||'ספק לא ידוע';
+    if(!groups[sup])groups[sup]=[];
+    groups[sup].push({sh:sh,it:it,r:r});
+  });
+  var sups=Object.keys(groups);
+  if(!sups.length){alert('אין פריטים במלאי נמוך/קריטי');return;}
+  function buildMsg(sup){
+    var lines='שלום '+sup+',\nהזמנה ממערכת WeightStock — '+today+':\n';
+    groups[sup].forEach(function(x){
+      var ul=unitL(x.it);
+      var rq=x.it.reorderQty||'—';
+      lines+='• '+x.it.name+': '+x.r.qty+' '+ul+' במלאי, צריך '+rq+' '+ul+'\n';
+    });
+    lines+='תודה, '+bizName;
+    return lines;
+  }
+  if(sups.length===1){
+    var msg=encodeURIComponent(buildMsg(sups[0]));
+    window.open('https://wa.me/?text='+msg,'_blank');
+  } else {
+    var html='<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">בחר ספק לשליחת הזמנה:</div>';
+    sups.forEach(function(sup){
+      var cnt=groups[sup].length;
+      var msg=encodeURIComponent(buildMsg(sup));
+      html+='<button onclick="window.open(\'https://wa.me/?text='+msg.replace(/'/g,"\\'")+'\')" style="width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:8px;text-align:right;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;">'+
+        '<span>'+sup+'</span><span style="font-size:12px;color:var(--muted);font-weight:400;">'+cnt+' פריטים</span></button>';
+    });
+    document.getElementById('whatsapp-order-list').innerHTML=html;
+    openModal('modal-whatsapp-order');
+  }
+}
+window.openWhatsAppOrder=openWhatsAppOrder;
 
 /* ════════════════════════════════════════════════════
    מחשבון הקמה
