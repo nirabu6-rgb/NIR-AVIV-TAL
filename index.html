@@ -4025,7 +4025,7 @@ var DAILY_TIPS=[
   'עדכן מלאי לפחות פעם בשבוע להימנע מחוסרים',
   'הגדר סף התראה מתאים לכל פריט לפי צריכה שבועית',
   'צור קשר עם ספקים לפני שהמלאי מגיע לסף הקריטי',
-  'השתמש בברקוד לסריקה מהירה וחיסכון בזמן',
+
   'ערוך דוח מלאי חודשי לניהול תקציב נכון',
   'פריטים בעלי תפוגה — בדוק תאריכים כל שבוע',
   'הזמן כמות גדולה כשיש מבצע — חסוך בעלויות הובלה',
@@ -4141,10 +4141,8 @@ function renderWeighHistory(){
   var el=document.getElementById('wh-list');if(!el)return;
   if(!h.length){el.innerHTML='<div class="empty"><div class="ic">⏱️</div><div>אין היסטוריית שקילות עדיין</div></div>';return;}
   el.innerHTML=h.slice(0,50).map(function(e){
-    var aClass=e.action==='receive'?'receive':'weigh';
-    var aLbl=e.action==='receive'?'קבלה':'שקילה';
     return '<div class="wh-item">'+
-      '<span class="wh-action '+aClass+'">'+aLbl+'</span>'+
+      '<span class="wh-action weigh">שקילה</span>'+
       '<div style="flex:1;"><div style="font-weight:600;">'+e.name+'</div>'+
       '<div class="muted" style="font-size:11px;">'+e.shelfName+'</div></div>'+
       '<div style="text-align:left;font-size:12px;">'+
@@ -4403,36 +4401,8 @@ function exportGenerate(){
   var ts=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
 
   var rows, tableRows='';
-  if(type==='receive'){
-    var h=getWeighHistory().filter(function(e){return e.action==='receive';}).slice().reverse();
-    if(type==='period'){
-      var df=new Date(document.getElementById('exp-date-from').value).getTime()||0;
-      var dt=new Date(document.getElementById('exp-date-to').value).getTime()+86400000||Infinity;
-      h=h.filter(function(e){return e.date>=df&&e.date<=dt;});
-    }
-    tableRows=h.map(function(e,i){
-      return '<tr style="border-bottom:1px solid #e2e8f0;background:'+(i%2?'#f8fafc':'#fff')+'">'+
-        '<td style="padding:8px 6px;">'+(i+1)+'</td>'+
-        '<td style="padding:8px 6px;font-weight:600;">'+e.name+'</td>'+
-        '<td style="padding:8px 6px;">'+e.shelfName+'</td>'+
-        '<td style="padding:8px 6px;text-align:center;font-weight:700;">'+e.weight+'</td>'+
-        '<td style="padding:8px 6px;text-align:center;">'+e.unit+'</td>'+
-        '<td style="padding:8px 6px;text-align:center;color:#5A6B8A;font-size:11px;">'+new Date(e.date).toLocaleString('he-IL')+'</td>'+
-      '</tr>';
-    }).join('');
-    var headerRow='<tr style="background:#003B8E;color:#fff;"><th style="padding:9px 6px;text-align:right;">#</th>'+
-      '<th style="padding:9px 6px;text-align:right;">פריט</th><th style="padding:9px 6px;text-align:right;">מיקום</th>'+
-      '<th style="padding:9px 6px;text-align:center;">כמות</th><th style="padding:9px 6px;text-align:center;">יחידה</th>'+
-      '<th style="padding:9px 6px;text-align:center;">תאריך ושעה</th></tr>';
-    rows={total:h.length,low:0,value:0};
-  } else {
+  {
     var dataRows=_getExportRows();
-    if(_exportType==='period'){
-      var df2=new Date(document.getElementById('exp-date-from').value).getTime()||0;
-      var dt2=new Date(document.getElementById('exp-date-to').value).getTime()+86400000||Infinity;
-      // filter by history in range — show shelves with readings in range
-      dataRows=dataRows; // keep all, period filter is for receive history
-    }
     tableRows=dataRows.map(function(r,i){
       var stColor={תקין:'#007A4D',נמוך:'#D97706',קריטי:'#C0392B','לא מחובר':'#94a3b8'}[r.status]||'#333';
       return '<tr style="border-bottom:1px solid #e2e8f0;background:'+(i%2?'#f8fafc':'#fff')+'">'+
@@ -4456,6 +4426,7 @@ function exportGenerate(){
     var low=dataRows.filter(function(r){return r.st==='warn'||r.st==='crit';}).length;
     rows={total:dataRows.length,low:low,value:0};
   }
+
 
   var w=window.open('','_blank','width=900,height=700');
   if(!w)return;
@@ -4516,14 +4487,7 @@ function exportGenerateCSV(){
   var BOM='﻿';
   var csv,filename,ds=new Date().toISOString().slice(0,10);
 
-  if(type==='receive'){
-    var h=getWeighHistory().filter(function(e){return e.action==='receive';}).slice().reverse();
-    csv=BOM+'פריט,מיקום,כמות,יחידה,תאריך\n'+h.map(function(e){
-      function q(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}
-      return q(e.name)+','+q(e.shelfName)+','+q(e.weight)+','+q(e.unit)+','+q(new Date(e.date).toLocaleString('he-IL'));
-    }).join('\n');
-    filename='קבלות-'+ds+'.csv';
-  } else {
+  {
     var dataRows=_getExportRows();
     csv=BOM+'שם פריט,קטגוריה,מיקום,כמות נוכחית,יחידה,סף מינימום,סטטוס\n'+dataRows.map(function(r){
       function q(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}
