@@ -338,6 +338,26 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 
 /* ── SHELF GRID ── */
 .shelf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+/* ── LIST VIEW ── */
+.shelf-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.shelf-list-row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:12px 14px;cursor:pointer;border:1px solid var(--border);transition:background .12s;}
+.shelf-list-row:active{background:var(--card2);}
+.shelf-list-row .sl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.shelf-list-row.ok .sl-dot{background:#10B981;}
+.shelf-list-row.warn .sl-dot{background:#F59E0B;}
+.shelf-list-row.crit .sl-dot{background:#EF4444;}
+.shelf-list-row.offline .sl-dot{background:#94a3b8;}
+.shelf-list-row .sl-name{flex:1;min-width:0;}
+.shelf-list-row .sl-item{font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.shelf-list-row .sl-shelf{font-size:11px;color:var(--muted);margin-top:1px;}
+.shelf-list-row .sl-right{display:flex;align-items:baseline;gap:4px;flex-shrink:0;}
+.shelf-list-row .sl-qty{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.shelf-list-row.ok .sl-qty{color:var(--text);}
+.shelf-list-row.warn .sl-qty{color:var(--warn);}
+.shelf-list-row.crit .sl-qty{color:var(--crit);}
+.shelf-list-row.offline .sl-qty{color:var(--muted);}
+.shelf-list-row .sl-unit{font-size:11px;color:var(--muted);font-weight:500;}
+.shelf-list-row .sl-badge{margin-right:4px;}
 .shelf-card{
   background:var(--card);
   border-radius:16px;
@@ -1224,6 +1244,7 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <div class="topbar">
     <div><h2><span id="dash-logo">&#x2696;&#xFE0F;</span> WeightStock</h2><div class="muted" id="db-sub" style="font-size:12px;">מערכת מלאי חכם לפי משקל</div></div>
     <div style="display:flex;gap:4px;align-items:center;">
+      <button class="icon-btn" id="view-toggle-btn" onclick="toggleDashView()" title="החלף תצוגה" style="font-size:16px;">☰</button>
       <button class="icon-btn" onclick="toggleSearch()" id="search-btn" title="חיפוש" style="font-size:16px;">🔍</button>
       <button class="icon-btn" id="bell-btn" onclick="navTo('screen-alerts')" title="התראות" style="font-size:16px;">🔔</button>
       <button class="icon-btn" onclick="openOrderToday()" title="מה להזמין היום" style="font-size:16px;">🛒</button>
@@ -2675,6 +2696,33 @@ window.openModal=openModal;window.closeModal=closeModal;
 /* ════════════════════════════════════════════════════
    DASHBOARD
 ════════════════════════════════════════════════════ */
+var _dashView=LS.get('dashView','grid'); // 'grid' | 'list'
+function toggleDashView(){
+  _dashView=_dashView==='grid'?'list':'grid';
+  LS.set('dashView',_dashView);
+  var btn=document.getElementById('view-toggle-btn');
+  if(btn)btn.textContent=_dashView==='grid'?'☰':'⊞';
+  renderDash();
+}
+window.toggleDashView=toggleDashView;
+
+function shListRow(sh,its){
+  var r=latestR(sh.id), st=calcSt(sh,r), it=its.find(function(i){return i.id===sh.itemId;});
+  var bdg={ok:'',warn:'<span class="badge warn sl-badge">⚠</span>',crit:'<span class="badge crit sl-badge">🔴</span>',offline:'<span class="badge off sl-badge">—</span>'}[st]||'';
+  return '<div class="shelf-list-row '+st+'" onclick="openSh(\''+sh.id+'\')" data-shid="'+sh.id+'">'+
+    '<div class="sl-dot"></div>'+
+    '<div class="sl-name">'+
+      '<div class="sl-item">'+(it?it.name:sh.name)+'</div>'+
+      '<div class="sl-shelf">📍 '+sh.name+(r?' · '+ago(r.ts):'')+'</div>'+
+    '</div>'+
+    bdg+
+    '<div class="sl-right">'+
+      '<div class="sl-qty">'+(r?r.qty:'—')+'</div>'+
+      '<div class="sl-unit">'+unitL(it)+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
 function renderDash(){
   var shs=getShelves(), its=getItems(), online=0, crit=0, warn=0;
   shs.forEach(function(s){var st=calcSt(s,latestR(s.id));if(st!=='offline')online++;if(st==='crit')crit++;if(st==='warn')warn++;});
@@ -2708,16 +2756,21 @@ function renderDash(){
   }
   var ord={crit:0,warn:1,ok:2,offline:3};
   var sorted=shs.slice().sort(function(a,b){return (ord[calcSt(a,latestR(a.id))]||3)-(ord[calcSt(b,latestR(b.id))]||3);});
+  var isList=_dashView==='list';
+  var wrap=isList?'shelf-list':'shelf-grid';
+  var rowFn=isList?function(sh){return shListRow(sh,its);}:function(sh){return shCard(sh,its);};
+  var btn=document.getElementById('view-toggle-btn');
+  if(btn)btn.textContent=isList?'⊞':'☰';
   var hasZ=shs.some(function(s){return s.zone;}), html='';
   if(hasZ){
     var zones={};
     sorted.forEach(function(sh){var z=sh.zone||'';if(!zones[z])zones[z]=[];zones[z].push(sh);});
     Object.keys(zones).forEach(function(z){
       if(z)html+='<div class="zone-h">📍 '+z+'</div>';
-      html+='<div class="shelf-grid">'+zones[z].map(function(sh){return shCard(sh,its);}).join('')+'</div>';
+      html+='<div class="'+wrap+'">'+zones[z].map(rowFn).join('')+'</div>';
     });
   } else {
-    html='<div class="shelf-grid">'+sorted.map(function(sh){return shCard(sh,its);}).join('')+'</div>';
+    html='<div class="'+wrap+'">'+sorted.map(rowFn).join('')+'</div>';
   }
   document.getElementById('db-shelves').innerHTML=html;
   updBell();
