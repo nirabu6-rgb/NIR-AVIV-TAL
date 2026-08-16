@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <link rel="manifest" href="manifest.json">
-<script src="zxing.min.js" async></script>
 <title>WeightStock — מלאי חכם לפי משקל</title>
 <script>
 if('serviceWorker' in navigator) {
@@ -1237,26 +1236,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <div id="alerts-list"></div>
 </div>
 
-<div class="screen" id="screen-quickscan">
-  <div class="topbar"><h2>&#x1F4F7; סריקה מהירה</h2></div>
-  <div id="qs-video-wrap">
-    <video id="qs-video" autoplay playsinline muted></video>
-    <div id="qs-crosshair"></div>
-  </div>
-  <div id="qs-status" class="muted" style="text-align:center;margin-bottom:14px;font-size:14px;min-height:20px;"></div>
-  <div style="text-align:center;margin-bottom:20px;">
-    <button class="qs-cam-btn" onclick="startQuickScan()">&#x1F4F7;</button>
-    <div class="muted" style="font-size:12px;margin-top:8px;">לחץ לסריקה עם המצלמה</div>
-  </div>
-  <div class="card" style="margin-bottom:12px;">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">או הכנס ברקוד ידנית:</div>
-    <div style="display:flex;gap:8px;">
-      <input id="qs-manual" placeholder='ברקוד / מק"ט...' style="flex:1;margin-top:0;">
-      <button class="btn sm" onclick="qsSearchBarcode(document.getElementById('qs-manual').value.trim())">חפש</button>
-    </div>
-  </div>
-  <div id="qs-result"></div>
-</div>
 
 <!-- ── SCREEN: REPORTS ── -->
 <div class="screen" id="screen-reports">
@@ -1312,8 +1291,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 </nav>
 <div id="fab-menu" style="display:none;position:fixed;bottom:140px;left:50%;transform:translateX(-50%);z-index:60;background:var(--card);border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.22);overflow:hidden;border:1px solid var(--border);min-width:260px;max-width:340px;width:90%;">
   <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;">פעולות</div>
-  <button onclick="closeFabMenu();openReceive();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📥 קבלת סחורה</button>
-  <button onclick="closeFabMenu();navTo('screen-quickscan');" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">📷 סריקה מהירה</button>
   <button onclick="closeFabMenu();openSetupWizard();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">⚖️ משטח שקילה חדש</button>
   <button onclick="closeFabMenu();openSuppliers();" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 16px;text-align:right;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;">🏭 ספקים</button>
   <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;">כלים</div>
@@ -1755,43 +1732,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   </div>
 </div>
 
-<!-- MODAL: RECEIVE STOCK -->
-<div class="modal-overlay" id="modal-receive">
-  <div class="modal-box mid" style="width:calc(100% - 28px);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;">📥 קבלת סחורה</h3>
-      <button class="modal-close" onclick="closeModal('modal-receive')">&#x2715;</button>
-    </div>
-
-    <!-- חיפוש / סריקת ברקוד -->
-    <div id="receive-search-wrap" style="margin-bottom:14px;">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">חפש פריט לפי שם, ברקוד או מק"ט</div>
-      <div style="display:flex;gap:8px;">
-        <input id="receive-search" placeholder="🔍 שם / ברקוד / מק&quot;ט..." oninput="receiveSearch()" style="flex:1;">
-        <button class="icon-btn" onclick="receiveScan()" title="סרוק ברקוד">📷</button>
-      </div>
-      <div id="receive-results" style="max-height:180px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);margin-top:6px;display:none;"></div>
-    </div>
-
-    <!-- פריט נבחר -->
-    <div id="receive-item-wrap" style="display:none;">
-      <div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:12px;">
-        <div id="receive-item-name" style="font-weight:700;font-size:15px;"></div>
-        <div id="receive-item-info" class="muted" style="font-size:12px;margin-top:3px;"></div>
-        <div style="margin-top:8px;font-size:13px;">כמות נוכחית: <b id="receive-current-qty">—</b></div>
-      </div>
-      <label>כמות שהתקבלה</label>
-      <input id="receive-qty" type="number" min="1" placeholder="הזן כמות...">
-      <input type="hidden" id="receive-shelf-id">
-      <div class="row" style="margin-top:14px;">
-        <button class="btn sec" onclick="receiveReset()">← שנה פריט</button>
-        <button class="btn ok" onclick="saveReceive()">אשר קבלה ✓</button>
-      </div>
-    </div>
-
-    <button class="btn sec" style="margin-top:8px;" onclick="closeModal('modal-receive')">סגור</button>
-  </div>
-</div>
 
 <!-- MODAL: BARCODE SCANNER -->
 <div class="modal-overlay" id="modal-barcode">
@@ -1954,11 +1894,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
           <div style="font-size:13px;font-weight:700;">דוח מלאי נמוך</div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px;">פריטים מתחת לסף</div>
         </button>
-        <button onclick="exportSelectType('receive')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
-          <div style="font-size:28px;margin-bottom:6px;">📦</div>
-          <div style="font-size:13px;font-weight:700;">דוח קבלת סחורה</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">היסטוריית קבלות</div>
-        </button>
         <button onclick="exportSelectType('period')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;">
           <div style="font-size:28px;margin-bottom:6px;">📅</div>
           <div style="font-size:13px;font-weight:700;">דוח תקופתי</div>
@@ -2005,8 +1940,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <button class="sidebtn" id="side-screen-items" onclick="navTo('screen-items')"><span class="ic">📦</span>פריטים</button>
   <button class="sidebtn" id="side-screen-categories" onclick="navTo('screen-categories')"><span class="ic">🏷️</span>קטגוריות</button>
   <button class="sidebtn" id="side-screen-alerts" onclick="navTo('screen-alerts')"><span class="ic">🔔</span>התראות</button>
-  <button class="sidebtn" onclick="openReceive()"><span class="ic">📥</span>קבלת סחורה</button>
-  <button class="sidebtn" id="side-screen-quickscan" onclick="navTo('screen-quickscan')"><span class="ic">📷</span>סריקה מהירה</button>
   <button class="sidebtn" id="side-screen-reports" onclick="openReports()"><span class="ic">📊</span>דוחות</button>
   <button class="sidebtn" id="side-screen-history" onclick="navTo('screen-history')"><span class="ic">⏱️</span>היסטוריה</button>
   <div style="flex:1;"></div>
@@ -2079,9 +2012,9 @@ var LS={
 };
 
 var LANG={
-  he:{dashboard:'דשבורד',items:'פריטים',categories:'קטגוריות',receive:'קבלת סחורה',alerts:'התראות',settings:'הגדרות',save:'שמור',cancel:'ביטול',search:'חיפוש'},
-  en:{dashboard:'Dashboard',items:'Items',categories:'Categories',receive:'Receive',alerts:'Alerts',settings:'Settings',save:'Save',cancel:'Cancel',search:'Search'},
-  ar:{dashboard:'لوحة القيادة',items:'العناصر',categories:'الفئات',receive:'استلام',alerts:'تنبيهات',settings:'الإعدادات',save:'حفظ',cancel:'إلغاء',search:'بحث'}
+  he:{dashboard:'דשבורד',items:'פריטים',categories:'קטגוריות',alerts:'התראות',settings:'הגדרות',save:'שמור',cancel:'ביטול',search:'חיפוש'},
+  en:{dashboard:'Dashboard',items:'Items',categories:'Categories',alerts:'Alerts',settings:'Settings',save:'Save',cancel:'Cancel',search:'Search'},
+  ar:{dashboard:'لوحة القيادة',items:'العناصر',categories:'الفئات',alerts:'تنبيهات',settings:'الإعدادات',save:'حفظ',cancel:'إلغاء',search:'بحث'}
 };
 
 function applyLang(lang){
@@ -2095,7 +2028,6 @@ function applyLang(lang){
   var nb=document.getElementById('nav-screen-dashboard'); if(nb){var ic=nb.querySelector('.ic');nb.innerHTML='';if(ic)nb.appendChild(ic);nb.appendChild(document.createTextNode(L.dashboard));}
   var ni=document.getElementById('nav-screen-items'); if(ni){var ic2=ni.querySelector('.ic');ni.innerHTML='';if(ic2)ni.appendChild(ic2);ni.appendChild(document.createTextNode(L.items));}
   var nc=document.getElementById('nav-screen-categories'); if(nc){var ic3=nc.querySelector('.ic');nc.innerHTML='';if(ic3)nc.appendChild(ic3);nc.appendChild(document.createTextNode(L.categories));}
-  var nr=document.getElementById('nav-screen-receive'); if(nr){var ic4=nr.querySelector('.ic');nr.innerHTML='';if(ic4)nr.appendChild(ic4);nr.appendChild(document.createTextNode(L.receive));}
   // highlight active lang button
   ['he','en','ar'].forEach(function(l){var b=document.getElementById('lang-btn-'+l);if(b){b.style.borderColor=l===lang?'var(--accent)':'var(--border)';b.style.color=l===lang?'var(--accent)':'var(--text)';}});
 }
@@ -2626,7 +2558,6 @@ window.doLogin=doLogin;
 var activeSc='screen-dashboard', curSh=null;
 function navTo(id){
   closeFabMenu();
-  stopQuickScan();
   var im=document.getElementById('item-fab-menu'); if(im)im.style.display='none';
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active'); activeSc=id;
@@ -2641,7 +2572,6 @@ function navTo(id){
   if(id==='screen-items')renderItemsSc();
   if(id==='screen-categories')renderCatsSc();
   if(id==='screen-alerts')renderAlerts();
-  if(id==='screen-quickscan')initQuickScanScreen();
   if(id==='screen-history')renderWeighHistory();
   if(id==='screen-autoorders')renderAutoOrders();
   if(id==='screen-reports')renderReports();
@@ -2755,7 +2685,6 @@ function renderSh(id){
       '</div>';
   }
   html+='<button class="btn sec" onclick="manualRead(\''+id+'\')">קרא עכשיו (ידני)</button>';
-  html+='<button class="btn" style="margin-top:8px;background:var(--ok);" onclick="openReceive(\''+id+'\')">📥 קבלת סחורה</button>';
   if(it){
     var urgColor=st==='crit'?'var(--crit)':st==='warn'?'var(--warn)':'var(--accent)';
     html+='<button class="btn" style="margin-top:8px;background:'+urgColor+';" onclick="openOrder(\''+id+'\')">'+
@@ -3613,104 +3542,15 @@ function markReceived(oid){
 window.openOrderHistory=openOrderHistory;window.markReceived=markReceived;window.logOrder=logOrder;
 
 /* ════════════════════════════════════════════════════
-   RECEIVE STOCK
+   RECEIVE STOCK — removed, stubs only
 ════════════════════════════════════════════════════ */
-function openReceive(id){
-  document.getElementById('receive-search').value='';
-  document.getElementById('receive-results').style.display='none';
-  document.getElementById('receive-results').innerHTML='';
-  document.getElementById('receive-qty').value='';
-  document.getElementById('receive-item-wrap').style.display='none';
-  document.getElementById('receive-search-wrap').style.display='block';
-  if(id){
-    receivePickShelf(id);
-  }
-  openModal('modal-receive');
-}
-function receivePickShelf(id){
-  var sh=getShelves().find(function(s){return s.id===id;}); if(!sh)return;
-  var it=getItems().find(function(i){return i.id===sh.itemId;});
-  var r=latestR(id), ul=unitL(it);
-  document.getElementById('receive-shelf-id').value=id;
-  document.getElementById('receive-item-name').textContent=it?it.name:'פריט לא ידוע';
-  document.getElementById('receive-item-info').textContent=(sh.name)+(it&&it.sku?' · '+it.sku:'')+(it&&it.barcode?' · '+it.barcode:'');
-  document.getElementById('receive-current-qty').textContent=(r?r.qty:'0')+' '+ul;
-  document.getElementById('receive-qty').value='';
-  document.getElementById('receive-item-wrap').style.display='block';
-  document.getElementById('receive-search-wrap').style.display='none';
-}
-function receiveReset(){
-  document.getElementById('receive-item-wrap').style.display='none';
-  document.getElementById('receive-search-wrap').style.display='block';
-  document.getElementById('receive-search').value='';
-  document.getElementById('receive-results').style.display='none';
-  document.getElementById('receive-shelf-id').value='';
-}
-function receiveSearch(){
-  var q=(document.getElementById('receive-search').value||'').trim().toLowerCase();
-  var el=document.getElementById('receive-results');
-  if(!q){el.style.display='none';el.innerHTML='';return;}
-  var shs=getShelves(), its=getItems();
-  var matches=[];
-  shs.forEach(function(sh){
-    var it=its.find(function(i){return i.id===sh.itemId;});
-    if(!it)return;
-    var hay=(it.name+' '+(it.sku||'')+' '+(it.barcode||'')+' '+sh.name).toLowerCase();
-    if(hay.indexOf(q)>=0)matches.push({sh:sh,it:it});
-  });
-  if(!matches.length){el.innerHTML='<div style="padding:12px;color:var(--muted);text-align:center;">לא נמצא</div>';el.style.display='block';return;}
-  el.innerHTML=matches.map(function(m){
-    return '<div onclick="receivePickShelf(\''+m.sh.id+'\')" style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;">'+
-      '<div style="font-weight:700;">'+m.it.name+'</div>'+
-      '<div style="font-size:12px;color:var(--muted);">'+m.sh.name+(m.it.sku?' · '+m.it.sku:'')+(m.it.barcode?' · '+m.it.barcode:'')+'</div></div>';
-  }).join('');
-  el.style.display='block';
-}
-function receiveScan(){
-  var v=document.createElement('video');
-  v.setAttribute('playsinline','');
-  v.style.cssText='position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:9999;background:#000;';
-  var ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:60px;';
-  ov.innerHTML='<button style="background:#fff;border:none;border-radius:20px;padding:12px 30px;font-size:16px;font-weight:700;cursor:pointer;">ביטול</button>';
-  document.body.appendChild(v); document.body.appendChild(ov);
-  startCameraScan(v, function(code){
-    document.body.removeChild(v); document.body.removeChild(ov);
-    document.getElementById('receive-search').value=code;
-    receiveSearch();
-  }, function(){
-    document.body.removeChild(v); document.body.removeChild(ov);
-  });
-  ov.querySelector('button').onclick=function(){
-    stopCameraScan();
-    document.body.removeChild(v); document.body.removeChild(ov);
-  };
-}
-window.receiveSearch=receiveSearch; window.receiveReset=receiveReset; window.receiveScan=receiveScan; window.receivePickShelf=receivePickShelf;
-function saveReceive(){
-  var id=document.getElementById('receive-shelf-id').value;
-  var recvd=parseInt(document.getElementById('receive-qty').value)||0;
-  if(recvd<=0){alert('יש להזין כמות חיובית');return;}
-  var sh=getShelves().find(function(s){return s.id===id;}); if(!sh)return;
-  var it=getItems().find(function(i){return i.id===sh.itemId;});
-  var r=latestR(id), uw=it?parseFloat(it.unitWeight)||1:1, tare=parseFloat(sh.tare)||0;
-  var curQty=r?r.qty:0;
-  var newRaw=tare+(curQty+recvd)*uw;
-  switchToUser();
-  var nr=addReading(id,Math.round(newRaw*10)/10);
-  if(nr){
-    var all=LS.get('readings',{});
-    if(all[id]&&all[id].length)all[id][all[id].length-1].src='receive';
-    LS.set('readings',all);
-  }
-  renderDash();
-  if(activeSc==='screen-shelf-detail')renderSh(id);
-  // record in weigh history
-  if(nr){recordWeigh(id,curQty+recvd,'receive');}
-  closeModal('modal-receive');
-  document.getElementById('receive-qty').value='';
-}
+function openReceive(){}
+function saveReceive(){}
+function receiveSearch(){}
+function receiveScan(){}
+function receiveReset(){}
 window.openReceive=openReceive;window.saveReceive=saveReceive;
+window.receiveSearch=receiveSearch; window.receiveReset=receiveReset; window.receiveScan=receiveScan;
 
 /* ════════════════════════════════════════════════════
    BARCODE SCANNER
@@ -3755,37 +3595,11 @@ document.addEventListener('click',function(e){
 });
 
 /* ════════════════════════════════════════════════════
-   QUICK SCAN
+   QUICK SCAN — removed, stubs only
 ════════════════════════════════════════════════════ */
-var _qsStream=null, _qsInterval=null;
-
-function initQuickScanScreen(){
-  var r=document.getElementById('qs-result'); if(r)r.innerHTML='';
-  var s=document.getElementById('qs-status'); if(s)s.textContent='';
-  var m=document.getElementById('qs-manual'); if(m)m.value='';
-  var vw=document.getElementById('qs-video-wrap'); if(vw)vw.style.display='none';
-}
-
-function startQuickScan(){
-  if(_qsStream){stopQuickScan();return;}
-  var qs=document.getElementById('qs-status');
-  if(qs)qs.textContent='פותח מצלמה...';
-  startCameraScan(null, function(code){
-    if(qs)qs.textContent='✓ נמצא: '+code;
-    var m=document.getElementById('qs-manual'); if(m)m.value=code;
-    qsSearchBarcode(code);
-  }, function(e){
-    if(qs)qs.textContent=e&&e.message?e.message:'לא ניתן לסרוק — הזן ידנית';
-  });
-}
-window.startQuickScan=startQuickScan;
-
-function stopQuickScan(){
-  if(_qsInterval){clearInterval(_qsInterval);_qsInterval=null;}
-  if(_qsStream){_qsStream.getTracks().forEach(function(t){t.stop();});_qsStream=null;}
-  var vid=document.getElementById('qs-video'); if(vid)vid.srcObject=null;
-  var vw=document.getElementById('qs-video-wrap'); if(vw)vw.style.display='none';
-}
+function initQuickScanScreen(){}
+function stopQuickScan(){}
+window.initQuickScanScreen=initQuickScanScreen;
 window.stopQuickScan=stopQuickScan;
 
 function qsSearchBarcode(code){
@@ -3810,7 +3624,7 @@ function qsSearchBarcode(code){
     (sh?'<div class="muted" style="font-size:12px;margin-bottom:8px;">'+sh.name+'</div>':'')+
     '<div style="font-size:40px;font-weight:800;color:var(--accent);margin:8px 0 4px;">'+(r?r.qty:'&#x2014;')+'</div>'+
     '<div class="muted">'+ul+' במלאי</div>'+
-    (sh?'<button class="btn ok" style="margin-top:16px;font-size:17px;padding:15px;" onclick="openReceive(\''+sh.id+'\')">&#x1F4E5; קבלת סחורה +</button>':
+    (sh?'':
       '<div class="muted" style="margin-top:12px;font-size:13px;">פריט לא משויך למשטח</div>')+
     '</div>';
 }
@@ -4074,46 +3888,10 @@ document.addEventListener('keydown',function(e){
    CUSTOM THEME COLORS
 ════════════════════════════════════════════════════ */
 
-/* ── סריקת ברקוד אחידה (ZXing + BarcodeDetector fallback) ── */
-var _scannerActive=false, _zxReader=null;
-
-function startCameraScan(videoEl, onFound, onError){
-  // iOS Safari: צילום תמונה עם המצלמה ופענוח ZXing
-  var inp=document.createElement('input');
-  inp.type='file';
-  inp.accept='image/*';
-  inp.capture='environment';
-  inp.style.display='none';
-  document.body.appendChild(inp);
-  inp.onchange=function(){
-    var file=inp.files&&inp.files[0];
-    document.body.removeChild(inp);
-    if(!file){if(onError)onError(new Error('בוטל'));return;}
-    var url=URL.createObjectURL(file);
-    if(typeof ZXing!=='undefined'&&ZXing.BrowserMultiFormatReader){
-      var reader=new ZXing.BrowserMultiFormatReader();
-      reader.decodeFromImageUrl(url).then(function(result){
-        URL.revokeObjectURL(url);
-        onFound(result.getText());
-      }).catch(function(){
-        URL.revokeObjectURL(url);
-        if(onError)onError(new Error('לא נמצא ברקוד — נסה שוב'));
-      });
-    } else {
-      URL.revokeObjectURL(url);
-      if(onError)onError(new Error('ZXing לא נטען'));
-    }
-  };
-  inp.oncancel=function(){document.body.removeChild(inp);};
-  inp.click();
-}
-
-function stopCameraScan2(){} // stub לתאימות
-
-function stopCameraScan(){
-  _scannerActive=false;
-  if(_zxReader){try{_zxReader.reset();}catch(e){}  _zxReader=null;}
-}
+/* ── סריקת ברקוד — removed, stubs only ── */
+function startCameraScan(){}
+function stopCameraScan(){}
+function stopCameraScan2(){}
 window.startCameraScan=startCameraScan;
 window.stopCameraScan=stopCameraScan;
 
@@ -4563,7 +4341,7 @@ window.openExport=openExport;
 
 function exportSelectType(type){
   _exportType=type;
-  var titles={full:'📋 דוח מלאי מלא',low:'⚠️ דוח מלאי נמוך',receive:'📦 דוח קבלת סחורה',period:'📅 דוח תקופתי'};
+  var titles={full:'📋 דוח מלאי מלא',low:'⚠️ דוח מלאי נמוך',period:'📅 דוח תקופתי'};
   document.getElementById('exp-title').value=titles[type]||'דוח מלאי';
   document.getElementById('export-modal-title').textContent='הגדרות דוח';
   document.getElementById('exp-period-wrap').style.display=(type==='period')?'':'none';
