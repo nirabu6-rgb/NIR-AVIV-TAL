@@ -1096,40 +1096,6 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   </div>
 </div>
 
-<!-- ══ EMPLOYEE MANAGEMENT MODAL ══ -->
-<div class="modal" id="modal-employees" style="z-index:450;">
-  <div class="emp-modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 style="margin:0;">👥 ניהול עובדים</h3>
-      <button class="modal-close" onclick="closeModal('modal-employees')">✕</button>
-    </div>
-    <div id="emp-list-wrap"></div>
-    <button class="btn" style="width:100%;margin-top:16px;" onclick="openAddEmp()">+ הוסף עובד</button>
-  </div>
-</div>
-
-<!-- ══ ADD/EDIT EMPLOYEE MODAL ══ -->
-<div class="modal" id="modal-edit-emp" style="z-index:460;">
-  <div class="emp-modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 style="margin:0;" id="emp-modal-title">הוספת עובד</h3>
-      <button class="modal-close" onclick="closeModal('modal-edit-emp')">✕</button>
-    </div>
-    <label>שם העובד</label>
-    <input id="emp-name" placeholder="שם מלא">
-    <label style="margin-top:12px;">קוד כניסה (4 ספרות)</label>
-    <input id="emp-code" type="tel" inputmode="numeric" maxlength="4" placeholder="0000">
-    <div style="font-size:12px;color:var(--muted);margin-top:4px;">העובד יזין קוד זה בכניסה לאפליקציה</div>
-    <div style="margin-top:20px;font-size:14px;font-weight:700;color:var(--text);">הרשאות גישה</div>
-    <div class="perm-grid" id="perm-grid"></div>
-    <input type="hidden" id="emp-edit-id">
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn sec" style="flex:1;" onclick="closeModal('modal-edit-emp')">ביטול</button>
-      <button class="btn ok" style="flex:1;" onclick="saveEmp()">שמור עובד</button>
-    </div>
-  </div>
-</div>
-
 <!-- ══ ACTIVITY LOG MODAL ══ -->
 <div class="modal" id="modal-actlog" style="z-index:450;">
   <div class="emp-modal-box">
@@ -2945,7 +2911,6 @@ function saveEmp(){
   }
   setEmployees(emps);
   logAct('emp_save','שמירת עובד: '+name);
-  closeModal('modal-edit-emp');
   cancelEmpForm();
   renderEmpList();
   showToast('עובד נשמר בהצלחה ✓');
