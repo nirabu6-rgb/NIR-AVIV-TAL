@@ -854,36 +854,46 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 }
 
 /* ── TV MODE ── */
-#tv-overlay{position:fixed;inset:0;background:#010812;z-index:500;display:none;flex-direction:column;color:#E8EEF8;font-family:'Rubik','Segoe UI',Arial,sans-serif;}
+#tv-overlay{position:fixed;inset:0;background:#030D1A;z-index:500;display:none;flex-direction:column;color:#E8EEF8;font-family:'Rubik','Segoe UI',Arial,sans-serif;overflow:hidden;}
 #tv-overlay.show{display:flex;}
-.tv-header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:rgba(0,59,142,.12);border-bottom:1px solid rgba(255,255,255,.05);}
-.tv-biz{font-size:22px;font-weight:800;color:#fff;letter-spacing:.5px;}
-.tv-biz-sub{font-size:12px;color:#3A5478;margin-top:2px;font-weight:400;}
-.tv-clock{font-size:48px;font-weight:300;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-1px;}
-.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px 20px;flex:1;overflow:auto;}
-.tv-tile{border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px;position:relative;overflow:hidden;background:transparent;border:1px solid rgba(255,255,255,.08);}
-.tv-tile::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;}
-.tv-tile.ok{border-color:rgba(0,122,77,.3);}
-.tv-tile.ok::before{background:#007A4D;}
-.tv-tile.warn{border-color:rgba(217,119,6,.3);}
-.tv-tile.warn::before{background:#D97706;}
-.tv-tile.crit{border-color:rgba(192,57,43,.4);}
-.tv-tile.crit::before{background:#C0392B;}
-.tv-tile.offline{border-color:rgba(255,255,255,.05);}
-.tv-tile.offline::before{background:#1A2B48;}
-.tv-qty{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:8px;}
+.tv-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:18px 28px 14px;background:linear-gradient(180deg,rgba(0,31,91,.7) 0%,rgba(3,13,26,0) 100%);position:relative;z-index:2;}
+.tv-biz-wrap{display:flex;align-items:center;gap:12px;}
+.tv-logo{width:38px;height:38px;background:linear-gradient(135deg,#003B8E,#6B21A8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.tv-biz{font-size:20px;font-weight:800;color:#fff;letter-spacing:.3px;}
+.tv-biz-sub{font-size:11px;color:#3A6090;margin-top:1px;}
+.tv-clock{font-size:56px;font-weight:200;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-2px;text-align:center;line-height:1;}
+.tv-clock-date{font-size:11px;color:#3A6090;text-align:center;margin-top:2px;letter-spacing:.5px;}
+.tv-stats{display:flex;gap:14px;justify-content:flex-end;align-items:center;}
+.tv-stat-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;}
+.tv-stat-chip.ok-chip{border-color:rgba(16,185,129,.25);color:#10B981;}
+.tv-stat-chip.warn-chip{border-color:rgba(245,158,11,.25);color:#F59E0B;}
+.tv-stat-chip.crit-chip{border-color:rgba(239,68,68,.3);color:#EF4444;}
+.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:10px 24px 20px;flex:1;overflow:auto;align-content:start;}
+.tv-tile{border-radius:16px;padding:20px 18px 16px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;transition:transform .3s;}
+.tv-tile::after{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;}
+.tv-tile.ok{background:linear-gradient(145deg,rgba(0,122,77,.18) 0%,rgba(16,185,129,.06) 100%);border:1px solid rgba(16,185,129,.2);}
+.tv-tile.warn{background:linear-gradient(145deg,rgba(180,83,9,.2) 0%,rgba(245,158,11,.07) 100%);border:1px solid rgba(245,158,11,.25);}
+.tv-tile.crit{background:linear-gradient(145deg,rgba(127,29,29,.3) 0%,rgba(239,68,68,.1) 100%);border:1px solid rgba(239,68,68,.3);}
+.tv-tile.crit{animation:tv-pulse 2s ease-in-out infinite;}
+@keyframes tv-pulse{0%,100%{border-color:rgba(239,68,68,.3);}50%{border-color:rgba(239,68,68,.7);}}
+.tv-tile.offline{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);}
+.tv-status-bar{height:3px;border-radius:2px;width:100%;margin-bottom:4px;}
+.tv-tile.ok .tv-status-bar{background:linear-gradient(90deg,#007A4D,#10B981);}
+.tv-tile.warn .tv-status-bar{background:linear-gradient(90deg,#B45309,#F59E0B);}
+.tv-tile.crit .tv-status-bar{background:linear-gradient(90deg,#991B1B,#EF4444);}
+.tv-tile.offline .tv-status-bar{background:rgba(255,255,255,.08);}
+.tv-qty{font-size:58px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-2px;}
 .tv-tile.ok .tv-qty{color:#10B981;}
 .tv-tile.warn .tv-qty{color:#F59E0B;}
 .tv-tile.crit .tv-qty{color:#EF4444;}
 .tv-tile.offline .tv-qty{color:#1E3050;}
-.tv-name{font-size:14px;font-weight:700;color:#C8D8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tv-shelf{font-size:11px;color:#2A3D5A;margin-top:3px;font-weight:500;}
-.tv-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle;}
-.tv-tile.ok .tv-status-dot{background:#10B981;}
-.tv-tile.warn .tv-status-dot{background:#F59E0B;}
-.tv-tile.crit .tv-status-dot{background:#EF4444;}
-.tv-tile.offline .tv-status-dot{background:#1A2B48;}
-.tv-exit{position:fixed;top:16px;left:16px;z-index:501;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#8AAAD0;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;backdrop-filter:blur(8px);}
+.tv-unit{font-size:13px;font-weight:600;opacity:.6;margin-top:-4px;}
+.tv-name{font-size:15px;font-weight:700;color:#C8D8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;}
+.tv-shelf{font-size:11px;color:#3A6090;margin-top:2px;display:flex;align-items:center;gap:4px;}
+.tv-footer{padding:8px 28px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.04);}
+.tv-footer-txt{font-size:11px;color:#1E3A5A;letter-spacing:.3px;}
+.tv-exit{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#8AAAD0;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:background .15s;}
+.tv-exit:hover{background:rgba(255,255,255,.12);}
 
 /* ── LEADERBOARD ── */
 .lb-tabs{display:flex;gap:6px;margin-bottom:14px;}
@@ -1835,15 +1845,25 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 
 <!-- TV OVERLAY -->
 <div id="tv-overlay">
-  <button class="tv-exit" onclick="exitTVMode()">יציאה &#x2715;</button>
   <div class="tv-header">
-    <div>
-      <div class="tv-biz" id="tv-biz-name">WeightStock</div>
-      <div class="tv-biz-sub">מסך מלאי — עדכון אוטומטי כל 30 שניות</div>
+    <div class="tv-biz-wrap">
+      <div class="tv-logo">⚖️</div>
+      <div>
+        <div class="tv-biz" id="tv-biz-name">WeightStock</div>
+        <div class="tv-biz-sub">מסך מלאי חי</div>
+      </div>
     </div>
-    <div class="tv-clock" id="tv-clock">00:00</div>
+    <div style="text-align:center;">
+      <div class="tv-clock" id="tv-clock">00:00</div>
+      <div class="tv-clock-date" id="tv-clock-date"></div>
+    </div>
+    <div class="tv-stats" id="tv-stats"></div>
   </div>
   <div class="tv-grid" id="tv-grid"></div>
+  <div class="tv-footer">
+    <span class="tv-footer-txt" id="tv-last-refresh">מתרענן כל 30 שניות</span>
+    <button class="tv-exit" onclick="exitTVMode()">יציאה ✕</button>
+  </div>
 </div>
 
 
@@ -2642,14 +2662,35 @@ function shCard(sh,its){
   var r=latestR(sh.id), st=calcSt(sh,r), it=its.find(function(i){return i.id===sh.itemId;});
   var qc={ok:'var(--text)',warn:'var(--warn)',crit:'var(--crit)',offline:'var(--muted)'}[st];
   var bdg={ok:'<span class="badge ok">✓ תקין</span>',warn:'<span class="badge warn">⚠ נמוך</span>',crit:'<span class="badge crit">🔴 קריטי</span>',offline:'<span class="badge off">לא מחובר</span>'}[st];
-  return '<div class="shelf-card '+st+'" onclick="openSh(\''+sh.id+'\')">'+bdg+
-    '<div class="qty" style="color:'+qc+';">'+(r?r.qty:'—')+'</div>'+
+  var sparkSvg=mkSparkline(sh.id,st);
+  return '<div class="shelf-card '+st+'" data-shid="'+sh.id+'" onclick="openSh(\''+sh.id+'\')">'+bdg+
+    '<div class="qty" id="qty-'+sh.id+'" style="color:'+qc+';">'+(r?r.qty:'—')+'</div>'+
     '<div style="font-size:10px;color:var(--muted);">'+unitL(it)+'</div>'+
     '<div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(it?it.name:'—')+'</div>'+
     '<div style="font-size:10px;color:var(--muted);">'+(r?fmtW(r.netWeight):'—')+'</div>'+
     '<div style="font-size:10px;color:var(--muted);">'+sh.name+'</div>'+
     '<div style="font-size:10px;color:var(--muted);margin-top:6px;">'+(r?ago(r.ts):'אין קריאה')+'</div>'+
+    (sparkSvg?'<div style="margin-top:6px;">'+sparkSvg+'</div>':'')+
     '</div>';
+}
+
+/* Feature 1 — Sparkline helper */
+function mkSparkline(shelfId,st){
+  var reads=getReadings(shelfId);
+  if(reads.length<2)return '';
+  var pts=reads.slice(-10).map(function(r){return r.qty;});
+  var mn=Math.min.apply(null,pts), mx=Math.max.apply(null,pts);
+  var W=80,H=30,n=pts.length;
+  if(mn===mx){mx=mn+1;}
+  var coords=pts.map(function(v,i){
+    var x=Math.round(i*(W-4)/(n-1))+2;
+    var y=Math.round(H-4-((v-mn)/(mx-mn))*(H-8))+2;
+    return x+','+y;
+  });
+  var col={ok:'#007A4D',warn:'#D97706',crit:'#C0392B',offline:'#5A6B8A'}[st]||'#003B8E';
+  return '<svg width="'+W+'" height="'+H+'" style="display:block;overflow:visible;" viewBox="0 0 '+W+' '+H+'">'+
+    '<polyline points="'+coords.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/>'+
+    '</svg>';
 }
 
 /* ════════════════════════════════════════════════════
@@ -2694,6 +2735,25 @@ function renderSh(id){
     html+='<button class="btn" style="margin-top:8px;background:'+urgColor+';" onclick="openOrder(\''+id+'\')">'+
       (st==='crit'?'🔴 הזמן מלאי עכשיו':st==='warn'?'⚠️ הזמן מלאי':'📋 הזמנה מספק')+
     '</button>';
+  }
+  /* Feature 2 — Forecast */
+  var fc=calcForecast(id);
+  if(fc.daysLeft===null){
+    html+='<div class="card" style="background:var(--card2);font-size:13px;color:var(--muted);">אין מספיק נתונים לחיזוי</div>';
+  } else {
+    var fcColor=fc.daysLeft<3?'var(--crit)':fc.daysLeft<7?'var(--warn)':'var(--ok)';
+    html+='<div class="card" style="background:var(--card2);display:flex;align-items:center;gap:10px;">'+
+      '<span style="font-size:20px;">🔮</span>'+
+      '<div><div style="font-size:12px;color:var(--muted);">חיזוי צריכה</div>'+
+      '<div style="font-size:15px;font-weight:700;color:'+fcColor+';">צפי: ייגמר בעוד '+fc.daysLeft+' ימים</div>'+
+      '<div style="font-size:11px;color:var(--muted);">קצב צריכה: '+fc.rate.toFixed(1)+' ליחידה ליום</div></div>'+
+      '</div>';
+  }
+  /* Feature 6 — Visual history line chart */
+  if(reads.length>=2){
+    html+='<div class="card"><b style="font-size:13px;">📈 גרף כמות לאורך זמן</b>'+mkLineChart(reads,sh,ul)+'</div>';
+  } else {
+    html+='<div class="card" style="font-size:13px;color:var(--muted);">אין מספיק נתונים לגרף</div>';
   }
   if(reads.length>1)html+='<div class="card"><b style="font-size:13px;">היסטוריה (14 יום)</b>'+mkChart(reads,sh,ul)+'</div>';
   var rec=reads.slice(-10).reverse();
@@ -3801,23 +3861,37 @@ function updateTVClock(){
   var now=new Date();
   var h=String(now.getHours()).padStart(2,'0'), m=String(now.getMinutes()).padStart(2,'0');
   el.textContent=h+':'+m;
+  var de=document.getElementById('tv-clock-date'); if(de){
+    var days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    de.textContent='יום '+days[now.getDay()]+', '+now.toLocaleDateString('he-IL');
+  }
 }
 
 function renderTVGrid(){
   var shs=getShelves(), its=getItems(), html='';
+  var okC=0,warnC=0,critC=0;
   shs.forEach(function(sh){
     var it=its.find(function(i){return i.id===sh.itemId;});
     var r=latestR(sh.id), st=calcSt(sh,r);
+    var ul=it?unitL(it):'';
+    if(st==='ok')okC++; else if(st==='warn')warnC++; else if(st==='crit')critC++;
     html+='<div class="tv-tile '+st+'">'+
+      '<div class="tv-status-bar"></div>'+
       '<div class="tv-qty">'+(r?r.qty:'—')+'</div>'+
-      '<div>'+
-        '<div class="tv-name"><span class="tv-status-dot"></span>'+(it?it.name:'—')+'</div>'+
-        '<div class="tv-shelf">📍 '+sh.name+'</div>'+
-      '</div>'+
+      '<div class="tv-unit">'+ul+'</div>'+
+      '<div class="tv-name">'+(it?it.name:'—')+'</div>'+
+      '<div class="tv-shelf"><span>📍</span>'+sh.name+'</div>'+
     '</div>';
   });
-  if(!html)html='<div style="color:#475569;font-size:24px;text-align:center;grid-column:1/-1;margin-top:40px;">אין משטחי שקילה</div>';
+  if(!html)html='<div style="color:#1E3A5A;font-size:22px;text-align:center;grid-column:1/-1;margin-top:60px;">אין משטחי שקילה</div>';
   var g=document.getElementById('tv-grid'); if(g)g.innerHTML=html;
+  var stats=document.getElementById('tv-stats');
+  if(stats)stats.innerHTML=
+    (okC?'<div class="tv-stat-chip ok-chip">✓ '+okC+' תקין</div>':'')+
+    (warnC?'<div class="tv-stat-chip warn-chip">⚠ '+warnC+' נמוך</div>':'')+
+    (critC?'<div class="tv-stat-chip crit-chip">🔴 '+critC+' קריטי</div>':'');
+  var rf=document.getElementById('tv-last-refresh');
+  if(rf){var now=new Date();rf.textContent='עודכן: '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');}
 }
 window.renderTVGrid=renderTVGrid;
 
