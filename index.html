@@ -1459,7 +1459,11 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
     <div class="adv-wrap" id="adv-wrap">
       <div class="row">
         <div><label>מק"ט / קטלוג</label><input id="im-sku" placeholder="ABC-123"></div>
-        <div><label id="im-price-lbl">מחיר ליחידה</label><input id="im-price" type="number" step="0.01" placeholder="0.00"></div>
+        <div><label id="im-price-lbl">מחיר קנייה ליחידה</label><input id="im-price" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="row">
+        <div><label id="im-sell-price-lbl">מחיר מכירה ליחידה</label><input id="im-sell-price" type="number" step="0.01" placeholder="0.00"></div>
+        <div></div>
       </div>
       <div class="row">
         <div><label>כמות הזמנה מינ'</label><input id="im-minord" type="number" placeholder="100"></div>
@@ -2726,14 +2730,17 @@ function shListRow(sh,its){
 function renderDash(){
   var shs=getShelves(), its=getItems(), online=0, crit=0, warn=0;
   shs.forEach(function(s){var st=calcSt(s,latestR(s.id));if(st!=='offline')online++;if(st==='crit')crit++;if(st==='warn')warn++;});
-  // calc total inventory value
-  var totalVal=0;
+  // calc cost + sell inventory values
+  var totalCost=0, totalSell=0;
   shs.forEach(function(s){
     var r=latestR(s.id); if(!r)return;
-    var it=its.find(function(i){return i.id===s.itemId;}); if(!it||!it.price)return;
-    totalVal+=r.qty*(parseFloat(it.price)||0);
+    var it=its.find(function(i){return i.id===s.itemId;}); if(!it)return;
+    var qty=r.qty||0;
+    totalCost+=qty*(parseFloat(it.price)||0);
+    totalSell+=qty*(parseFloat(it.sellPrice)||parseFloat(it.price)||0);
   });
   var cur=getCurrency();
+  var profit=totalSell-totalCost;
   document.getElementById('db-summary').innerHTML=
     '<div class="sum-tile"><div class="n">'+shs.length+'</div><div class="l">משטחים</div></div>'+
     '<div class="sum-tile"><div class="n" style="color:var(--warn);">'+warn+'</div><div class="l">אזהרות</div></div>'+
@@ -2741,10 +2748,21 @@ function renderDash(){
     '<div class="sum-tile"><div class="n" style="color:var(--ok);">'+online+'</div><div class="l">מחוברים</div></div>';
   var vb=document.getElementById('db-value-bar');
   if(vb){
-    vb.innerHTML=totalVal>0?'<div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:10px 14px;">'+
-      '<span style="font-size:16px;">💰</span>'+
-      '<div style="flex:1;"><div style="font-size:11px;color:var(--muted);">ערך מלאי כולל</div></div>'+
-      '<span style="background:rgba(37,99,235,.12);color:var(--accent);border-radius:20px;padding:4px 14px;font-size:15px;font-weight:800;">'+cur+totalVal.toFixed(2)+'</span>'+
+    var hasPrices=totalCost>0||totalSell>0;
+    vb.innerHTML=hasPrices?
+      '<div style="display:grid;grid-template-columns:1fr 1fr'+(profit>0?' 1fr':'')+'  ;gap:8px;margin-bottom:4px;">'+
+        (totalCost>0?'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">'+
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px;">💸 עלות מלאי</div>'+
+          '<div style="font-size:16px;font-weight:800;color:var(--text);">'+cur+totalCost.toFixed(2)+'</div>'+
+        '</div>':'')+
+        (totalSell>0?'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">'+
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px;">🏷️ ערך מכירה</div>'+
+          '<div style="font-size:16px;font-weight:800;color:var(--ok);">'+cur+totalSell.toFixed(2)+'</div>'+
+        '</div>':'')+
+        (profit>0?'<div style="background:rgba(0,122,77,.07);border:1px solid rgba(0,122,77,.2);border-radius:12px;padding:10px 12px;">'+
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:3px;">📈 רווח גולמי</div>'+
+          '<div style="font-size:16px;font-weight:800;color:var(--ok);">'+cur+profit.toFixed(2)+'</div>'+
+        '</div>':'')+
       '</div>':'';
   }
   var s=getSettings();
@@ -2879,7 +2897,11 @@ function renderSh(id){
       '<div style="font-weight:700;font-size:15px;margin-bottom:6px;">'+chip+it.name+'</div>'+
       '<div class="row" style="font-size:13px;"><div><div class="muted">יחידה</div><b>'+ul+'</b></div><div><div class="muted">משקל ליח\'</div><b>'+it.unitWeight+'גרם</b></div><div><div class="muted">פרופיל</div><b>'+hw.label+'</b></div></div>'+
       (it.sku?'<div class="row" style="font-size:13px;margin-top:8px;"><div><div class="muted">מק"ט</div><b>'+it.sku+'</b></div>'+(it.barcode?'<div><div class="muted">ברקוד</div><b>'+it.barcode+'</b></div>':'<div></div>')+'<div></div></div>':'')+
-      (it.price>0?'<div class="row" style="font-size:13px;margin-top:8px;"><div><div class="muted">מחיר</div><b>'+cur+parseFloat(it.price).toFixed(2)+'</b></div>'+(it.minOrder?'<div><div class="muted">הזמנה מינ\'</div><b>'+it.minOrder+' '+ul+'</b></div>':'<div></div>')+'<div></div></div>':'')+
+      ((it.price>0||it.sellPrice>0)?'<div class="row" style="font-size:13px;margin-top:8px;">'+
+        (it.price>0?'<div><div class="muted">💸 מחיר קנייה</div><b>'+cur+parseFloat(it.price).toFixed(2)+'</b></div>':'<div></div>')+
+        (it.sellPrice>0?'<div><div class="muted">🏷️ מחיר מכירה</div><b style="color:var(--ok);">'+cur+parseFloat(it.sellPrice).toFixed(2)+'</b></div>':'<div></div>')+
+        (it.minOrder?'<div><div class="muted">הזמנה מינ\'</div><b>'+it.minOrder+' '+ul+'</b></div>':'<div></div>')+
+      '</div>':'')+
       (it.supplier?'<div style="font-size:13px;margin-top:8px;"><div class="muted">ספק</div><b>'+it.supplier+(it.supplierPhone?' · '+it.supplierPhone:'')+'</b></div>':'')+
       '<div class="row" style="font-size:13px;margin-top:8px;"><div><div class="muted">טרה</div><b>'+(sh.tare||0)+'גרם</b></div><div><div class="muted">קריאה</div><b>'+(r?ago(r.ts):'—')+'</b></div><div><div class="muted">מקור</div><b>'+(r?(r.src==='auto'?'ESP32':'ידני'):'—')+'</b></div></div>'+
       (sh.notes?'<div style="font-size:12px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">'+sh.notes+'</div>':'')+
@@ -3308,14 +3330,15 @@ window.addItemForSupplier=addItemForSupplier;
 function openAddItem(){
   if(!checkLimit('item'))return;
   document.getElementById('item-modal-title').textContent='פריט חדש';
-  ['im-name','im-sku','im-bar','im-price','im-minord','im-reorderqty','im-sup','im-suptel','im-supwa','im-supemail','im-ordermail','im-notes','im-loc-row','im-loc-shelf','im-loc-cell','im-expiry'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['im-name','im-sku','im-bar','im-price','im-sell-price','im-minord','im-reorderqty','im-sup','im-suptel','im-supwa','im-supemail','im-ordermail','im-notes','im-loc-row','im-loc-shelf','im-loc-cell','im-expiry'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('im-id').value=''; document.getElementById('im-del').style.display='none';
   document.getElementById('adv-wrap').classList.remove('open');
   document.querySelector('.adv-btn').textContent='פרטים נוספים (מק"ט, מחיר, ספק...)';
   document.getElementById('im-sup-details').style.display='none';
   fillUS('im-utype','unit'); fillCS('im-cat','');
   fillSupplierDatalist();
-  document.getElementById('im-price-lbl').textContent='מחיר ליחידה ('+getCurrency()+')';
+  document.getElementById('im-price-lbl').textContent='מחיר קנייה ליחידה ('+getCurrency()+')';
+  document.getElementById('im-sell-price-lbl').textContent='מחיר מכירה ליחידה ('+getCurrency()+')';
   openModal('modal-item');
 }
 window.openAddItem=openAddItem;
@@ -3326,7 +3349,9 @@ function openEditItem(id){
   document.getElementById('im-name').value=it.name||'';
   document.getElementById('im-uwt').value=it.unitWeight||'';
   document.getElementById('im-sku').value=it.sku||''; document.getElementById('im-bar').value=it.barcode||'';
-  document.getElementById('im-price').value=it.price||''; document.getElementById('im-minord').value=it.minOrder||'';
+  document.getElementById('im-price').value=it.price||'';
+  var spEl=document.getElementById('im-sell-price');if(spEl)spEl.value=it.sellPrice||'';
+  document.getElementById('im-minord').value=it.minOrder||'';
   fillSupplierDatalist();
   document.getElementById('im-sup').value=it.supplier||''; document.getElementById('im-suptel').value=it.supplierPhone||'';
   onSupplierInput(it.supplier||'');
@@ -3346,7 +3371,8 @@ function openEditItem(id){
   document.getElementById('adv-wrap').classList.toggle('open',!!hasA);
   document.querySelector('.adv-btn').textContent=hasA?'פרטים נוספים (פתוח)':'פרטים נוספים (מק"ט, מחיר, ספק...)';
   fillUS('im-utype',it.unitType||'unit'); fillCS('im-cat',it.categoryId||'');
-  document.getElementById('im-price-lbl').textContent='מחיר ליחידה ('+getCurrency()+')';
+  document.getElementById('im-price-lbl').textContent='מחיר קנייה ליחידה ('+getCurrency()+')';
+  document.getElementById('im-sell-price-lbl').textContent='מחיר מכירה ליחידה ('+getCurrency()+')';
   openModal('modal-item');
 }
 window.openEditItem=openEditItem;
@@ -3360,7 +3386,8 @@ function saveItem(){
   if(!name){alert('יש להזין שם פריט');return;} if(!uw||uw<=0){alert('יש להזין משקל סגולי');return;}
   switchToUser(); var its=getItems(), eid=document.getElementById('im-id').value;
   var expiryEl=document.getElementById('im-expiry'), rqEl2=document.getElementById('im-reorderqty');
-  var d={name:name,unitType:document.getElementById('im-utype').value||'unit',unitWeight:uw,categoryId:document.getElementById('im-cat').value||'',sku:document.getElementById('im-sku').value.trim(),barcode:document.getElementById('im-bar').value.trim(),price:parseFloat(document.getElementById('im-price').value)||0,minOrder:parseInt(document.getElementById('im-minord').value)||0,reorderQty:parseInt(rqEl2?rqEl2.value:0)||0,expiry:expiryEl?expiryEl.value.trim():'',supplier:document.getElementById('im-sup').value.trim(),supplierPhone:document.getElementById('im-suptel').value.trim(),supplierWhatsApp:document.getElementById('im-supwa').value.trim(),supplierEmail:document.getElementById('im-supemail').value.trim(),orderEmail:document.getElementById('im-ordermail').value.trim(),notes:document.getElementById('im-notes').value.trim(),location:{row:document.getElementById('im-loc-row').value.trim(),shelf:document.getElementById('im-loc-shelf').value.trim(),cell:document.getElementById('im-loc-cell').value.trim()}};
+  var spEl2=document.getElementById('im-sell-price');
+  var d={name:name,unitType:document.getElementById('im-utype').value||'unit',unitWeight:uw,categoryId:document.getElementById('im-cat').value||'',sku:document.getElementById('im-sku').value.trim(),barcode:document.getElementById('im-bar').value.trim(),price:parseFloat(document.getElementById('im-price').value)||0,sellPrice:parseFloat(spEl2?spEl2.value:0)||0,minOrder:parseInt(document.getElementById('im-minord').value)||0,reorderQty:parseInt(rqEl2?rqEl2.value:0)||0,expiry:expiryEl?expiryEl.value.trim():'',supplier:document.getElementById('im-sup').value.trim(),supplierPhone:document.getElementById('im-suptel').value.trim(),supplierWhatsApp:document.getElementById('im-supwa').value.trim(),supplierEmail:document.getElementById('im-supemail').value.trim(),orderEmail:document.getElementById('im-ordermail').value.trim(),notes:document.getElementById('im-notes').value.trim(),location:{row:document.getElementById('im-loc-row').value.trim(),shelf:document.getElementById('im-loc-shelf').value.trim(),cell:document.getElementById('im-loc-cell').value.trim()}};
   if(eid){var idx=its.findIndex(function(i){return i.id===eid;});if(idx>=0)Object.assign(its[idx],d);}else{d.id='i'+Date.now();its.push(d);}
   LS.set('items',its); closeModal('modal-item'); if(activeSc==='screen-items')renderItemsSc();
 }
