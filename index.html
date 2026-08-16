@@ -708,34 +708,47 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 }
 
 /* ── RESPONSIVE — TABLET ── */
+/* ── TABLET (600px+) ── */
 @media(min-width:600px){
   #app{max-width:100%;padding-bottom:72px;}
   .shelf-grid{grid-template-columns:1fr 1fr 1fr;}
   .bottomnav{max-width:100%;}
   .modal-overlay{align-items:center;}
-  .modal-box{border-radius:24px;margin:auto;max-width:520px;}
+  .modal-box{border-radius:20px;margin:auto;max-width:520px;}
   .modal-box::before{display:none;}
   .summary-row{flex-wrap:nowrap;}
+  .screen{padding:20px 24px;}
 }
 
-/* ── RESPONSIVE — DESKTOP ── */
+/* ── DESKTOP (1024px+) ── */
 @media(min-width:1024px){
+  body{background:var(--bg);}
   #app{display:flex;min-height:100vh;padding-bottom:0;max-width:none;}
   .bottomnav{display:none;}
   #sidebar-nav{
     display:flex !important;
     flex-direction:column;
-    width:220px;
+    width:240px;
     min-height:100vh;
-    background:#001F5B;
-    border-left:1px solid rgba(255,255,255,.08);
-    padding:24px 12px 20px;
+    background:linear-gradient(180deg,#001534 0%,#001F5B 100%);
+    border-left:1px solid rgba(255,255,255,.07);
+    padding:0 12px 20px;
     position:fixed;
-    right:0;top:0;
+    right:0;top:0;bottom:0;
     z-index:50;
-    gap:4px;
-    box-shadow:-2px 0 20px rgba(0,0,0,.25);
+    gap:2px;
+    box-shadow:-4px 0 24px rgba(0,0,0,.3);
+    overflow-y:auto;
   }
+  .sidebar-logo{
+    padding:22px 14px 20px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    margin-bottom:10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#003B8E,#6B21A8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .sidebar-logo-text{font-size:16px;font-weight:800;color:#fff;letter-spacing:.2px;}
+  .sidebar-logo-sub{font-size:11px;color:#3A6090;margin-top:1px;}
   .sidebtn{
     background:none;
     border:none;
@@ -753,20 +766,39 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
     transition:background .15s,color .15s;
   }
   .sidebtn:hover{background:rgba(255,255,255,.07);color:#B8D0F0;}
-  .sidebtn.active{
-    background:rgba(255,255,255,.12);
-    color:#fff;
-    font-weight:700;
-    border-right:3px solid #A855F7;
+  .sidebtn.active{background:rgba(255,255,255,.11);color:#fff;font-weight:700;border-right:3px solid #A855F7;}
+  .sidebtn .ic{font-size:19px;flex:0 0 24px;}
+  .sidebar-fab-btn{
+    margin:14px 0 6px;
+    background:linear-gradient(135deg,#003B8E,#6B21A8);
+    border:none;color:#fff;border-radius:12px;
+    padding:13px 14px;font-size:14px;font-weight:700;
+    cursor:pointer;width:100%;display:flex;align-items:center;gap:8px;
+    font-family:inherit;transition:opacity .15s;
   }
-  .sidebtn .ic{font-size:20px;flex:0 0 24px;}
-  #main-content{flex:1;margin-right:220px;min-width:0;}
-  .fab{left:auto;right:238px;}
-  #fab-menu{left:auto;right:238px;}
-  .shelf-grid{grid-template-columns:1fr 1fr 1fr 1fr;}
-  .modal-overlay{align-items:center;backdrop-filter:blur(5px);}
-  .modal-box{border-radius:24px;margin:auto;max-width:600px;}
+  .sidebar-fab-btn:hover{opacity:.88;}
+  #main-content{flex:1;margin-right:240px;min-width:0;max-width:calc(100vw - 240px);}
+  .screen{padding:28px 36px;max-width:1400px;}
+  .fab{display:none;}
+  #fab-menu{right:260px;left:auto;bottom:60px;}
+  .shelf-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+  .modal-overlay{align-items:center;backdrop-filter:blur(6px);}
+  .modal-box{border-radius:20px;margin:auto;max-width:640px;}
+  .modal-box.mid{max-width:520px;}
   .modal-box::before{display:none;}
+  .topbar{border-radius:16px;margin-bottom:20px;}
+  #screen-dashboard .topbar{background:none;padding:0 0 16px;border-radius:0;border-bottom:1px solid var(--border);margin-bottom:24px;}
+  #screen-dashboard .topbar h2{color:var(--text);font-size:24px;}
+  #screen-dashboard .topbar .muted{color:var(--muted);}
+  #screen-dashboard .topbar .icon-btn{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+  .db-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  #db-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+}
+
+/* ── WIDE DESKTOP (1440px+) ── */
+@media(min-width:1440px){
+  .shelf-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
+  .screen{padding:32px 48px;}
 }
 
 /* ── PLANS ── */
@@ -1979,14 +2011,25 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 
 <!-- SIDEBAR NAV (desktop) -->
 <nav id="sidebar-nav" style="display:none;">
-  <div style="font-size:20px;font-weight:800;color:var(--accent);padding:10px 14px 18px;border-bottom:1px solid var(--border);margin-bottom:8px;">⚖️ WeightStock</div>
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">⚖️</div>
+    <div>
+      <div class="sidebar-logo-text">WeightStock</div>
+      <div class="sidebar-logo-sub">ניהול מלאי חכם</div>
+    </div>
+  </div>
+  <button class="sidebar-fab-btn" onclick="toggleFabMenu()">
+    <span style="font-size:18px;line-height:1;">＋</span> פעולה חדשה
+  </button>
   <button class="sidebtn active" id="side-screen-dashboard" onclick="navTo('screen-dashboard')"><span class="ic">📊</span>דשבורד</button>
   <button class="sidebtn" id="side-screen-items" onclick="navTo('screen-items')"><span class="ic">📦</span>פריטים</button>
   <button class="sidebtn" id="side-screen-categories" onclick="navTo('screen-categories')"><span class="ic">🏷️</span>קטגוריות</button>
-  <button class="sidebtn" id="side-screen-alerts" onclick="navTo('screen-alerts')"><span class="ic">🔔</span>התראות</button>
-  <button class="sidebtn" id="side-screen-reports" onclick="openReports()"><span class="ic">📊</span>דוחות</button>
+  <button class="sidebtn" id="side-screen-reports" onclick="openReports()"><span class="ic">📈</span>דוחות</button>
   <button class="sidebtn" id="side-screen-history" onclick="navTo('screen-history')"><span class="ic">⏱️</span>היסטוריה</button>
+  <button class="sidebtn" id="side-screen-alerts" onclick="navTo('screen-alerts')"><span class="ic">🔔</span>התראות</button>
+  <button class="sidebtn" onclick="navTo('screen-autoorders')"><span class="ic">📦</span>הזמנות</button>
   <div style="flex:1;"></div>
+  <button class="sidebtn" onclick="openTVMode()"><span class="ic">📺</span>מצב תצוגה</button>
   <button class="sidebtn" onclick="openSettings()"><span class="ic">⚙️</span>הגדרות</button>
 </nav>
 
