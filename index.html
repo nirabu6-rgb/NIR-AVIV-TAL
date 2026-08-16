@@ -2786,6 +2786,53 @@ function mkChart(reads,sh,ul){
   return '<div class="chart-wrap" style="margin-top:8px;"><svg width="'+tW+'" height="'+(H+20)+'" style="display:block;">'+bars+al+'</svg></div>';
 }
 
+/* Feature 2 — calcForecast */
+function calcForecast(shelfId){
+  var reads=getReadings(shelfId);
+  var now=Date.now(), cutoff=now-30*24*3600*1000;
+  var recent=reads.filter(function(r){return r.ts>=cutoff;});
+  if(recent.length<2)return {daysLeft:null,rate:0};
+  var first=recent[0], last=recent[recent.length-1];
+  var days=(last.ts-first.ts)/(24*3600*1000);
+  if(days<0.1)return {daysLeft:null,rate:0};
+  var consumed=first.qty-last.qty;
+  if(consumed<=0)return {daysLeft:null,rate:0};
+  var rate=consumed/days;
+  var daysLeft=rate>0?Math.max(0,Math.round(last.qty/rate)):null;
+  return {daysLeft:daysLeft,rate:rate};
+}
+window.calcForecast=calcForecast;
+
+/* Feature 6 — mkLineChart (inline SVG line chart) */
+function mkLineChart(reads,sh,ul){
+  var pts=reads.slice(-50);
+  if(pts.length<2)return '<div style="color:var(--muted);font-size:12px;margin-top:6px;">אין מספיק נתונים לגרף</div>';
+  var W=280,H=120,pad={t:10,r:10,b:24,l:30};
+  var iW=W-pad.l-pad.r, iH=H-pad.t-pad.b;
+  var qs=pts.map(function(r){return r.qty;}), ts=pts.map(function(r){return r.ts;});
+  var minQ=Math.min.apply(null,qs), maxQ=Math.max.apply(null,qs);
+  if(minQ===maxQ){maxQ=minQ+1;}
+  var minT=ts[0], maxT=ts[ts.length-1];
+  if(minT===maxT){maxT=minT+1;}
+  var toX=function(t){return pad.l+Math.round((t-minT)/(maxT-minT)*iW);};
+  var toY=function(q){return pad.t+Math.round((1-(q-minQ)/(maxQ-minQ))*iH);};
+  var coords=pts.map(function(r){return toX(r.ts)+','+toY(r.qty);});
+  var trend=qs[qs.length-1]-qs[0];
+  var lineColor=trend>0?'var(--ok)':trend<0?'var(--crit)':'var(--accent)';
+  var dots=pts.map(function(r,i){
+    if(i>0&&i<pts.length-1)return '';
+    return '<circle cx="'+toX(r.ts)+'" cy="'+toY(r.qty)+'" r="3.5" fill="'+lineColor+'" stroke="var(--card)" stroke-width="1.5"/>'+
+      '<text x="'+toX(r.ts)+'" y="'+(toY(r.qty)-7)+'" text-anchor="middle" font-size="9" fill="var(--muted)">'+r.qty+'</text>';
+  }).join('');
+  var yLabels='<text x="'+(pad.l-3)+'" y="'+(pad.t+4)+'" text-anchor="end" font-size="8" fill="var(--muted)">'+maxQ+'</text>'+
+    '<text x="'+(pad.l-3)+'" y="'+(pad.t+iH+4)+'" text-anchor="end" font-size="8" fill="var(--muted)">'+minQ+'</text>';
+  var xLabels='<text x="'+pad.l+'" y="'+(H-4)+'" text-anchor="middle" font-size="8" fill="var(--muted)">'+new Date(minT).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</text>'+
+    '<text x="'+(pad.l+iW)+'" y="'+(H-4)+'" text-anchor="middle" font-size="8" fill="var(--muted)">'+new Date(maxT).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</text>';
+  return '<div style="margin-top:8px;overflow-x:auto;"><svg width="'+W+'" height="'+H+'" style="display:block;max-width:100%;">'+
+    '<polyline points="'+coords.join(' ')+'" fill="none" stroke="'+lineColor+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    dots+yLabels+xLabels+'</svg></div>';
+}
+
 function manualRead(id){
   var sh=getShelves().find(function(s){return s.id===id;}); if(!sh)return;
   var it=getItems().find(function(i){return i.id===sh.itemId;});
@@ -2805,8 +2852,39 @@ function manualRead(id){
   openModal('modal-read');
   if(activeSc==='screen-shelf-detail')renderSh(id);
   renderDash();
+  /* Feature 3 — animate qty number + flash shelf card */
+  animateQty(id,r.qty);
 }
 window.manualRead=manualRead;
+
+/* Feature 3 — qty counter animation + flash */
+function animateQty(shelfId,newQty){
+  var el=document.getElementById('qty-'+shelfId);
+  if(!el)return;
+  var oldVal=parseFloat(el.textContent)||0;
+  var startT=null, dur=600;
+  function step(ts){
+    if(!startT)startT=ts;
+    var p=Math.min(1,(ts-startT)/dur);
+    el.textContent=Math.round(oldVal+(newQty-oldVal)*p);
+    if(p<1)requestAnimationFrame(step);
+    else el.textContent=newQty;
+  }
+  requestAnimationFrame(step);
+  /* flash card */
+  var card=el.closest('.shelf-card');
+  if(card){
+    var prev=card.style.transition||'';
+    card.style.transition='background 0.1s';
+    card.style.background='rgba(0,122,77,0.15)';
+    setTimeout(function(){
+      card.style.transition='background 0.6s';
+      card.style.background='';
+      setTimeout(function(){card.style.transition=prev;},650);
+    },120);
+  }
+}
+window.animateQty=animateQty;
 
 /* ════════════════════════════════════════════════════
    ITEMS
