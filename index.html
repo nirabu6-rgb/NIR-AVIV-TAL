@@ -1448,49 +1448,63 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
 <!-- ══ EMPLOYEES SCREEN ══ -->
 <div class="screen" id="screen-employees">
   <div class="topbar">
-    <h2>👥 ניהול עובדים</h2>
+    <div>
+      <h2>👥 ניהול עובדים</h2>
+      <div class="muted" id="emp-screen-sub" style="font-size:12px;">לחץ על עובד לעריכה</div>
+    </div>
     <button class="back-btn" onclick="navBack()">&#x2190; חזור</button>
   </div>
-  <div style="padding:14px;max-width:640px;margin:0 auto;">
-    <!-- Manager card -->
-    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,var(--accent2) 0%,var(--accent) 100%);color:#fff;border:none;">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;" id="emp-mgr-avatar">מ</div>
-        <div style="flex:1;">
-          <div style="font-weight:800;font-size:16px;" id="emp-mgr-name">מנהל</div>
-          <div style="font-size:12px;opacity:.8;">מנהל ראשי • גישה מלאה לכל המערכת</div>
-        </div>
-        <button onclick="openChangeMgrPin()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:12px;cursor:pointer;">🔑 שנה קוד</button>
-      </div>
-    </div>
-    <!-- Activity log shortcut -->
-    <button onclick="openActLog()" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;color:var(--text);cursor:pointer;margin-bottom:16px;text-align:right;">
-      <span style="font-size:22px;">📋</span>
-      <div style="flex:1;"><div style="font-weight:700;">יומן פעולות</div><div style="font-size:12px;color:var(--muted);">כניסות, עריכות, עדכוני כמות</div></div>
-      <span style="color:var(--muted);">›</span>
-    </button>
-    <!-- Employees section -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div style="font-weight:700;font-size:15px;">עובדים</div>
-      <button class="btn" style="padding:8px 16px;font-size:13px;" onclick="openAddEmpInline()">+ הוסף עובד</button>
-    </div>
-    <div id="emp-screen-list"></div>
+  <div style="padding:14px;max-width:700px;margin:0 auto;">
 
-    <!-- Add/Edit employee form (inline) -->
-    <div id="emp-inline-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:16px;">
-      <div style="font-weight:800;font-size:16px;margin-bottom:16px;" id="emp-form-title">הוספת עובד</div>
-      <label>שם העובד</label>
-      <input id="emp-name" placeholder="שם מלא">
-      <label style="margin-top:12px;">קוד כניסה (4 ספרות)</label>
-      <input id="emp-code" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" style="letter-spacing:6px;font-size:20px;font-weight:800;text-align:center;">
-      <div style="font-size:12px;color:var(--muted);margin-top:4px;">העובד יזין קוד זה בכניסה לאפליקציה</div>
-      <div style="margin-top:20px;font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">הרשאות גישה</div>
-      <div class="perm-grid" id="perm-grid"></div>
-      <input type="hidden" id="emp-edit-id">
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn sec" style="flex:1;" onclick="cancelEmpForm()">ביטול</button>
-        <button class="btn ok" style="flex:1;" onclick="saveEmp()">שמור עובד ✓</button>
+    <!-- Manager card -->
+    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,var(--accent2) 0%,var(--accent) 100%);color:#fff;border:none;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;" id="emp-mgr-avatar">מ</div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:15px;" id="emp-mgr-name">מנהל</div>
+          <div style="font-size:11px;opacity:.75;margin-top:2px;">מנהל ראשי · גישה מלאה</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="openActLog()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:7px 11px;color:#fff;font-size:12px;cursor:pointer;">📋 יומן</button>
+          <button onclick="openChangeMgrPin()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:7px 11px;color:#fff;font-size:12px;cursor:pointer;">🔑 קוד</button>
+        </div>
       </div>
+    </div>
+
+    <!-- Split layout: list on right, form on left (desktop) / stacked (mobile) -->
+    <div id="emp-split" style="display:flex;gap:14px;align-items:flex-start;">
+
+      <!-- Left: employee list -->
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:700;font-size:14px;color:var(--muted);">רשימת עובדים</div>
+          <button class="btn" style="padding:7px 14px;font-size:13px;" onclick="openAddEmpInline()">+ הוסף</button>
+        </div>
+        <div id="emp-screen-list"></div>
+      </div>
+
+      <!-- Right: add/edit form — always visible, resets to blank for new -->
+      <div id="emp-inline-form" style="flex:0 0 320px;background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:20px;display:none;">
+        <div style="font-weight:800;font-size:15px;margin-bottom:14px;color:var(--accent);" id="emp-form-title">✏️ הוספת עובד</div>
+
+        <label>שם מלא</label>
+        <input id="emp-name" placeholder="דוד לוי">
+
+        <label style="margin-top:12px;">קוד כניסה (4 ספרות)</label>
+        <input id="emp-code" type="tel" inputmode="numeric" maxlength="4" placeholder="0000"
+          style="letter-spacing:8px;font-size:22px;font-weight:800;text-align:center;padding:10px;">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;text-align:center;">העובד יזין קוד זה בכניסה</div>
+
+        <div style="margin-top:16px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">✅ הרשאות</div>
+        <div id="perm-grid" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+        <input type="hidden" id="emp-edit-id">
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn sec" style="flex:1;padding:10px;" onclick="cancelEmpForm()">ביטול</button>
+          <button class="btn ok" style="flex:1;padding:10px;" onclick="saveEmp()">שמור ✓</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -2863,21 +2877,29 @@ function buildPermGrid(perms){
   var grid=document.getElementById('perm-grid');
   grid.innerHTML=PERMISSIONS.map(function(p){
     var checked=perms&&perms[p.key]?'checked':'';
-    return '<label class="perm-row">'+
-      '<span class="perm-label">'+p.icon+' '+p.label+'</span>'+
+    return '<label class="perm-row" style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:9px 12px;cursor:pointer;">'+
+      '<span style="flex:1;font-size:13px;">'+p.icon+' '+p.label+'</span>'+
       '<span class="perm-toggle"><input type="checkbox" id="perm-'+p.key+'" '+checked+'><span class="pt-slider"></span></span>'+
     '</label>';
   }).join('');
 }
 
+function showEmpForm(){
+  var form=document.getElementById('emp-inline-form');
+  form.style.display='block';
+  /* on mobile (narrow), switch split to column so form appears below list */
+  var split=document.getElementById('emp-split');
+  if(split)split.style.flexDirection=window.innerWidth<640?'column':'row';
+  document.getElementById('emp-name').focus();
+}
+
 function openAddEmpInline(){
-  document.getElementById('emp-form-title').textContent='הוספת עובד';
+  document.getElementById('emp-form-title').textContent='✏️ הוספת עובד';
   document.getElementById('emp-name').value='';
   document.getElementById('emp-code').value='';
   document.getElementById('emp-edit-id').value='';
   buildPermGrid(DEFAULT_EMP_PERMS);
-  document.getElementById('emp-inline-form').style.display='block';
-  document.getElementById('emp-inline-form').scrollIntoView({behavior:'smooth'});
+  showEmpForm();
 }
 window.openAddEmpInline=openAddEmpInline;
 function openAddEmp(){openAddEmpInline();}
@@ -2887,13 +2909,12 @@ function openEditEmpInline(id){
   var emps=getEmployees();
   var emp=emps.find(function(e){return e.id===id;});
   if(!emp)return;
-  document.getElementById('emp-form-title').textContent='עריכת עובד — '+emp.name;
+  document.getElementById('emp-form-title').textContent='✏️ עריכת '+emp.name;
   document.getElementById('emp-name').value=emp.name;
   document.getElementById('emp-code').value=emp.code;
   document.getElementById('emp-edit-id').value=emp.id;
   buildPermGrid(emp.permissions);
-  document.getElementById('emp-inline-form').style.display='block';
-  document.getElementById('emp-inline-form').scrollIntoView({behavior:'smooth'});
+  showEmpForm();
 }
 window.openEditEmpInline=openEditEmpInline;
 function openEditEmp(id){openEditEmpInline(id);}
@@ -2928,7 +2949,6 @@ function saveEmp(){
   cancelEmpForm();
   renderEmpList();
   showToast('עובד נשמר בהצלחה ✓');
-  setTimeout(function(){navTo('screen-dashboard');},800);
 }
 window.saveEmp=saveEmp;
 
