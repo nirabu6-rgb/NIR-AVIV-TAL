@@ -1445,6 +1445,56 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   </div>
 </div>
 
+<!-- ══ EMPLOYEES SCREEN ══ -->
+<div class="screen" id="screen-employees">
+  <div class="topbar">
+    <h2>👥 ניהול עובדים</h2>
+    <button class="back-btn" onclick="navBack()">&#x2190; חזור</button>
+  </div>
+  <div style="padding:14px;max-width:640px;margin:0 auto;">
+    <!-- Manager card -->
+    <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,var(--accent2) 0%,var(--accent) 100%);color:#fff;border:none;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;" id="emp-mgr-avatar">מ</div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:16px;" id="emp-mgr-name">מנהל</div>
+          <div style="font-size:12px;opacity:.8;">מנהל ראשי • גישה מלאה לכל המערכת</div>
+        </div>
+        <button onclick="openChangeMgrPin()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:12px;cursor:pointer;">🔑 שנה קוד</button>
+      </div>
+    </div>
+    <!-- Activity log shortcut -->
+    <button onclick="openActLog()" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;color:var(--text);cursor:pointer;margin-bottom:16px;text-align:right;">
+      <span style="font-size:22px;">📋</span>
+      <div style="flex:1;"><div style="font-weight:700;">יומן פעולות</div><div style="font-size:12px;color:var(--muted);">כניסות, עריכות, עדכוני כמות</div></div>
+      <span style="color:var(--muted);">›</span>
+    </button>
+    <!-- Employees section -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:15px;">עובדים</div>
+      <button class="btn" style="padding:8px 16px;font-size:13px;" onclick="openAddEmpInline()">+ הוסף עובד</button>
+    </div>
+    <div id="emp-screen-list"></div>
+
+    <!-- Add/Edit employee form (inline) -->
+    <div id="emp-inline-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:16px;">
+      <div style="font-weight:800;font-size:16px;margin-bottom:16px;" id="emp-form-title">הוספת עובד</div>
+      <label>שם העובד</label>
+      <input id="emp-name" placeholder="שם מלא">
+      <label style="margin-top:12px;">קוד כניסה (4 ספרות)</label>
+      <input id="emp-code" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" style="letter-spacing:6px;font-size:20px;font-weight:800;text-align:center;">
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">העובד יזין קוד זה בכניסה לאפליקציה</div>
+      <div style="margin-top:20px;font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">הרשאות גישה</div>
+      <div class="perm-grid" id="perm-grid"></div>
+      <input type="hidden" id="emp-edit-id">
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn sec" style="flex:1;" onclick="cancelEmpForm()">ביטול</button>
+        <button class="btn ok" style="flex:1;" onclick="saveEmp()">שמור עובד ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /main-content -->
 <nav class="bottomnav">
   <button class="navbtn active" id="nav-screen-dashboard" onclick="navTo('screen-dashboard')"><span class="ic">&#x1F4CA;</span>דשבורד</button>
@@ -2173,6 +2223,7 @@ label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top
   <button class="sidebtn" onclick="navTo('screen-autoorders')"><span class="ic">📦</span>הזמנות</button>
   <div style="flex:1;"></div>
   <button class="sidebtn" onclick="openTVMode()"><span class="ic">📺</span>מצב תצוגה</button>
+  <button class="sidebtn" id="side-screen-employees" onclick="navTo('screen-employees')" style="display:none;"><span class="ic">👥</span>עובדים</button>
   <button class="sidebtn" onclick="openSettings()"><span class="ic">⚙️</span>הגדרות</button>
   <button class="sidebtn" id="side-switch-user" onclick="umLogout()" style="display:none;border-top:1px solid rgba(255,255,255,.1);margin-top:4px;"><span class="ic">🔄</span>החלף משתמש</button>
 </nav>
@@ -2750,6 +2801,9 @@ function applyUserPerms(){
   if(empBtn)empBtn.style.display=mgr?'':'none';
   var logBtn=document.getElementById('st-actlog-btn');
   if(logBtn)logBtn.style.display=mgr?'':'none';
+  /* Manager-only sidebar employees button */
+  var sideEmp=document.getElementById('side-screen-employees');
+  if(sideEmp)sideEmp.style.display=mgr?'flex':'';
   /* Sidebar switch user */
   var swBtn=document.getElementById('side-switch-user');
   if(swBtn)swBtn.style.display='flex';
@@ -2768,24 +2822,41 @@ window.umLogout=umLogout;
 
 /* ── Employee CRUD ── */
 function openEmployees(){
-  renderEmpList();
-  openModal('modal-employees');
+  navTo('screen-employees');
 }
 window.openEmployees=openEmployees;
 
 function renderEmpList(){
   var emps=getEmployees();
-  var wrap=document.getElementById('emp-list-wrap');
-  if(!emps.length){wrap.innerHTML='<div class="muted" style="text-align:center;padding:20px 0;">אין עובדים עדיין</div>';return;}
-  wrap.innerHTML=emps.map(function(e){
-    return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card2);border-radius:12px;margin-bottom:8px;">'+
-      '<div class="um-user-avatar">'+e.name[0]+'</div>'+
-      '<div style="flex:1;"><div style="font-weight:700;font-size:14px;">'+e.name+'</div>'+
-      '<div style="font-size:11px;color:var(--muted);">קוד: '+e.code+' | '+Object.values(e.permissions).filter(Boolean).length+'/'+PERMISSIONS.length+' הרשאות</div></div>'+
-      '<button onclick="openEditEmp(\''+e.id+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;">✏️</button>'+
-      '<button onclick="deleteEmp(\''+e.id+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;">🗑️</button>'+
+  /* screen list */
+  var wrap=document.getElementById('emp-screen-list');
+  /* also update modal list if exists */
+  var wrapM=document.getElementById('emp-list-wrap');
+  var mgr=LS.get('um_manager',null);
+  var mgrEl=document.getElementById('emp-mgr-name');
+  var mgrAv=document.getElementById('emp-mgr-avatar');
+  if(mgrEl&&mgr){mgrEl.textContent=mgr.name;if(mgrAv)mgrAv.textContent=mgr.name[0];}
+  var html=emps.length?emps.map(function(e){
+    var cnt=Object.values(e.permissions).filter(Boolean).length;
+    return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;">'+
+      '<div class="um-user-avatar" style="font-size:16px;">'+e.name[0]+'</div>'+
+      '<div style="flex:1;">'+
+        '<div style="font-weight:700;font-size:15px;">'+e.name+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px;">קוד: <b>'+e.code+'</b> &nbsp;|&nbsp; '+cnt+' מתוך '+PERMISSIONS.length+' הרשאות</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">'+
+          PERMISSIONS.filter(function(p){return e.permissions[p.key];}).map(function(p){
+            return '<span style="font-size:10px;background:var(--accent-light);color:var(--accent);border-radius:6px;padding:2px 6px;">'+p.icon+' '+p.label+'</span>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px;">'+
+        '<button onclick="openEditEmpInline(\''+e.id+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--text);">✏️ ערוך</button>'+
+        '<button onclick="deleteEmp(\''+e.id+'\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--crit);">🗑️</button>'+
+      '</div>'+
     '</div>';
-  }).join('');
+  }).join(''):'<div class="empty"><div class="ic">👤</div><b>אין עובדים עדיין</b><div class="muted">לחץ "הוסף עובד" כדי להתחיל</div></div>';
+  if(wrap)wrap.innerHTML=html;
+  if(wrapM)wrapM.innerHTML=html;
 }
 
 function buildPermGrid(perms){
@@ -2799,28 +2870,40 @@ function buildPermGrid(perms){
   }).join('');
 }
 
-function openAddEmp(){
-  document.getElementById('emp-modal-title').textContent='הוספת עובד';
+function openAddEmpInline(){
+  document.getElementById('emp-form-title').textContent='הוספת עובד';
   document.getElementById('emp-name').value='';
   document.getElementById('emp-code').value='';
   document.getElementById('emp-edit-id').value='';
   buildPermGrid(DEFAULT_EMP_PERMS);
-  openModal('modal-edit-emp');
+  document.getElementById('emp-inline-form').style.display='block';
+  document.getElementById('emp-inline-form').scrollIntoView({behavior:'smooth'});
 }
+window.openAddEmpInline=openAddEmpInline;
+function openAddEmp(){openAddEmpInline();}
 window.openAddEmp=openAddEmp;
 
-function openEditEmp(id){
+function openEditEmpInline(id){
   var emps=getEmployees();
   var emp=emps.find(function(e){return e.id===id;});
   if(!emp)return;
-  document.getElementById('emp-modal-title').textContent='עריכת עובד';
+  document.getElementById('emp-form-title').textContent='עריכת עובד — '+emp.name;
   document.getElementById('emp-name').value=emp.name;
   document.getElementById('emp-code').value=emp.code;
   document.getElementById('emp-edit-id').value=emp.id;
   buildPermGrid(emp.permissions);
-  openModal('modal-edit-emp');
+  document.getElementById('emp-inline-form').style.display='block';
+  document.getElementById('emp-inline-form').scrollIntoView({behavior:'smooth'});
 }
+window.openEditEmpInline=openEditEmpInline;
+function openEditEmp(id){openEditEmpInline(id);}
 window.openEditEmp=openEditEmp;
+
+function cancelEmpForm(){
+  document.getElementById('emp-inline-form').style.display='none';
+  document.getElementById('emp-edit-id').value='';
+}
+window.cancelEmpForm=cancelEmpForm;
 
 function saveEmp(){
   var name=document.getElementById('emp-name').value.trim();
@@ -2842,8 +2925,10 @@ function saveEmp(){
   setEmployees(emps);
   logAct('emp_save','שמירת עובד: '+name);
   closeModal('modal-edit-emp');
+  cancelEmpForm();
   renderEmpList();
   showToast('עובד נשמר בהצלחה ✓');
+  setTimeout(function(){navTo('screen-dashboard');},800);
 }
 window.saveEmp=saveEmp;
 
@@ -3147,6 +3232,7 @@ function navTo(id){
   if(id==='screen-alerts')renderAlerts();
   if(id==='screen-history')renderWeighHistory();
   if(id==='screen-autoorders')renderAutoOrders();
+  if(id==='screen-employees'){cancelEmpForm&&cancelEmpForm();renderEmpList();}
   if(id==='screen-reports')renderReports();
 }
 function navBack(){navTo(_prevSc||'screen-dashboard');}
